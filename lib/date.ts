@@ -35,6 +35,29 @@ export function periodRange(period: Period, date: string): { start: string; end:
   return { start: start.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) };
 }
 
+/** YYYY-MM 형식이며 실제 존재하는 월인지 */
+export function isMonthString(v: unknown): v is string {
+  if (typeof v !== "string" || !/^\d{4}-\d{2}$/.test(v)) return false;
+  const m = Number(v.slice(5, 7));
+  return m >= 1 && m <= 12 && Number(v.slice(0, 4)) >= 1;
+}
+
+/** YYYY-MM에 개월 수 더하기 */
+export function shiftMonth(month: string, n: number): string {
+  const d = new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)) - 1 + n, 1));
+  return d.toISOString().slice(0, 7);
+}
+
+/** YYYY-MM → 그 달 1일과 말일 */
+export function monthRange(month: string): { start: string; end: string } {
+  return periodRange("month", `${month}-01`);
+}
+
+/** 화면 표시용: 2026-11 → 2026년 11월 */
+export function formatKoreanMonth(month: string): string {
+  return `${month.slice(0, 4)}년 ${Number(month.slice(5, 7))}월`;
+}
+
 /** 화면 표시용: 2026-11-03 → 11월 3일 (화) */
 export function formatKoreanDate(date: string): string {
   const d = new Date(`${date}T00:00:00Z`);

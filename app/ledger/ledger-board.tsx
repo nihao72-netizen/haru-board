@@ -5,6 +5,7 @@ import { api, ClientApiError, errorMessage } from "@/lib/api/client";
 import { addDays, formatKoreanDate, periodRange, todayKST, type Period } from "@/lib/date";
 import { formatSignedWon, formatWon } from "@/lib/format";
 import type { Transaction, TxCategory, TxSummary, TxType } from "@/lib/ledger";
+import { StatsPanel } from "./stats-panel";
 
 type ListResult = {
   items: Transaction[];
@@ -205,10 +206,7 @@ export function LedgerBoard() {
       )}
 
       {tab === "stats" ? (
-        <section className="rounded-lg bg-white p-6 text-sm text-gray-600 shadow">
-          <h2 className="text-lg font-bold text-gray-900">통계·예산</h2>
-          <p className="mt-2">월별 지출 비교, 분류별 지출, 월 예산과 분류별 예산 기능은 다음 단계에서 제공됩니다. (개발 중)</p>
-        </section>
+        <StatsPanel thisMonth={today.slice(0, 7)} onNotice={setNotice} />
       ) : (
         <>
           {/* 기간 선택 + 합계 */}

@@ -46,7 +46,8 @@ export function parsePeriod(v: string | null): Period {
   return p;
 }
 
-function parseAmount(v: unknown): number {
+/** 양의 정수 금액(원). 숫자 문자열도 허용. 예산 금액에도 사용 */
+export function parseAmount(v: unknown): number {
   const n = typeof v === "string" && /^\d+$/.test(v.trim()) ? Number(v.trim()) : v;
   if (typeof n !== "number" || !Number.isInteger(n) || n <= 0) {
     throw new ApiError(400, "VALIDATION_ERROR", "금액은 1원 이상의 정수여야 합니다.");
