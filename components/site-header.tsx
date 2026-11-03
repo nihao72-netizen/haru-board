@@ -22,15 +22,17 @@ export function SiteHeader() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  const linkClass = "rounded px-2 py-1 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900";
+  const linkClass =
+    "shrink-0 whitespace-nowrap rounded px-2 py-1 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900";
 
   return (
     <header className="border-b border-gray-200 bg-white">
-      <nav className="mx-auto flex max-w-5xl items-center justify-between gap-2 px-4 py-3">
-        <Link href="/" className="text-lg font-bold text-gray-900">
+      <nav className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-2 gap-y-1 px-4 py-3">
+        <Link href="/" className="shrink-0 text-lg font-bold text-gray-900">
           하루정리
         </Link>
-        <div className="flex items-center gap-1 sm:gap-2">
+        {/* 좁은 화면에서는 메뉴가 로고 아래 줄로 내려가고, 필요하면 줄바꿈 */}
+        <div className="-ml-2 flex flex-wrap items-center gap-x-1 sm:ml-0 sm:gap-x-2">
           <Link href="/" className={linkClass}>
             홈
           </Link>
@@ -42,6 +44,9 @@ export function SiteHeader() {
           </Link>
           <Link href="/hanja" className={linkClass}>
             한자
+          </Link>
+          <Link href="/daily" className={linkClass}>
+            하루 마무리
           </Link>
           {status === "signed_in" && (
             <Link href="/account" className={linkClass}>

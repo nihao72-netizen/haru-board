@@ -162,6 +162,67 @@ export function optionText(q: QuestionRow | undefined, id: string | null | undef
   return q?.options.find((o) => o.id === id)?.text ?? null;
 }
 
+/**
+ * 내 풀이 기록 (최근 순). date는 서울 날짜 기준 그날 0시~24시.
+ * 이미 푼 문제라 정답·해설도 함께 (본인 시도만).
+ */
+export async function listAttempts(
+  supabase: SupabaseClient,
+  opts: { type: "all" | "daily" | "review"; date?: string | null; from: number; to: number },
+): Promise<{ items: AttemptRecord[]; total: number }> {
+  let query = supabase
+    .from("quiz_attempts")
+    .select("id, question_id, selected_option_id, is_correct, attempt_type, attempted_at", { count: "exact" });
+  if (opts.type !== "all") query = query.eq("attempt_type", opts.type);
+  if (opts.date) {
+    query = query
+      .gte("attempted_at", `${opts.date}T00:00:00+09:00`)
+      .lt("attempted_at", `${addDays(opts.date, 1)}T00:00:00+09:00`);
+  }
+  const { data, error, count } = await query
+    .order("attempted_at", { ascending: false })
+    .order("id", { ascending: true })
+    .range(opts.from, opts.to);
+  if (error) {
+    if (error.code === "PGRST103") return { items: [], total: count ?? 0 };
+    throw dbError(error);
+  }
+  const rows = (data ?? []) as {
+    id: string;
+    question_id: string;
+    selected_option_id: OptionId;
+    is_correct: boolean;
+    attempt_type: "daily" | "review";
+    attempted_at: string;
+  }[];
+
+  const [{ questions, characters }, answers] = await Promise.all([
+    loadQuestions(supabase, [...new Set(rows.map((r) => r.question_id))]),
+    loadAnswers(supabase, rows.map((r) => r.id)),
+  ]);
+
+  const items = rows.map((r): AttemptRecord => {
+    const q = questions.get(r.question_id);
+    const a = answers.get(r.id);
+    return {
+      attempt_id: r.id,
+      attempt_type: r.attempt_type,
+      attempted_at: r.attempted_at,
+      question_id: r.question_id,
+      question: q?.question_text ?? "",
+      question_type: q?.question_type ?? "reading",
+      character: (q && characters.get(q.character_id)) ?? null,
+      selected_option_id: r.selected_option_id,
+      selected_answer: optionText(q, r.selected_option_id),
+      is_correct: r.is_correct,
+      correct_option_id: a?.correct_option_id ?? null,
+      correct_answer: a?.correct_answer ?? null,
+      explanation: a?.explanation ?? null,
+    };
+  });
+  return { items, total: count ?? 0 };
+}
+
 type ReviewRow = { id: string; review_week: string; status: ReviewStatus };
 
 export type ReviewItemRow = {

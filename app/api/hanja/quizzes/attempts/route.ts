@@ -1,16 +1,6 @@
 import type { NextRequest } from "next/server";
-import { ApiError, dbError, handle, ok, pagination, readJson, requireUser } from "@/lib/api/http";
-import { addDays } from "@/lib/date";
-import {
-  loadAnswers,
-  loadQuestions,
-  optionText,
-  parseDailySubmit,
-  quizDbError,
-  type AttemptRecord,
-  type GradeResult,
-  type OptionId,
-} from "@/lib/quiz";
+import { ApiError, handle, ok, pagination, readJson, requireUser } from "@/lib/api/http";
+import { listAttempts, parseDailySubmit, quizDbError, type GradeResult } from "@/lib/quiz";
 import { isDateString } from "@/lib/validate";
 
 /**
@@ -44,61 +34,14 @@ export async function GET(request: NextRequest) {
     const { supabase } = await requireUser();
     const params = request.nextUrl.searchParams;
     const { page, limit, from, to } = pagination(params);
-
-    let query = supabase
-      .from("quiz_attempts")
-      .select("id, question_id, selected_option_id, is_correct, attempt_type, attempted_at", { count: "exact" });
     const type = params.get("type") ?? "all";
-    if (type === "daily" || type === "review") query = query.eq("attempt_type", type);
-    else if (type !== "all") throw new ApiError(400, "VALIDATION_ERROR", "type은 all, daily, review 중 하나여야 합니다.");
+    if (type !== "all" && type !== "daily" && type !== "review") {
+      throw new ApiError(400, "VALIDATION_ERROR", "type은 all, daily, review 중 하나여야 합니다.");
+    }
     const date = params.get("date");
-    if (date) {
-      if (!isDateString(date)) throw new ApiError(400, "VALIDATION_ERROR", "date는 YYYY-MM-DD 형식이어야 합니다.");
-      query = query.gte("attempted_at", `${date}T00:00:00+09:00`).lt("attempted_at", `${addDays(date, 1)}T00:00:00+09:00`);
-    }
+    if (date && !isDateString(date)) throw new ApiError(400, "VALIDATION_ERROR", "date는 YYYY-MM-DD 형식이어야 합니다.");
 
-    const { data, error, count } = await query
-      .order("attempted_at", { ascending: false })
-      .order("id", { ascending: true })
-      .range(from, to);
-    const meta = { page, limit, total: count ?? 0 };
-    if (error) {
-      if (error.code === "PGRST103") return ok({ items: [], ...meta });
-      throw dbError(error);
-    }
-    const rows = (data ?? []) as {
-      id: string;
-      question_id: string;
-      selected_option_id: OptionId;
-      is_correct: boolean;
-      attempt_type: "daily" | "review";
-      attempted_at: string;
-    }[];
-
-    const [{ questions, characters }, answers] = await Promise.all([
-      loadQuestions(supabase, [...new Set(rows.map((r) => r.question_id))]),
-      loadAnswers(supabase, rows.map((r) => r.id)),
-    ]);
-
-    const items: AttemptRecord[] = rows.map((r) => {
-      const q = questions.get(r.question_id);
-      const a = answers.get(r.id);
-      return {
-        attempt_id: r.id,
-        attempt_type: r.attempt_type,
-        attempted_at: r.attempted_at,
-        question_id: r.question_id,
-        question: q?.question_text ?? "",
-        question_type: q?.question_type ?? "reading",
-        character: (q && characters.get(q.character_id)) ?? null,
-        selected_option_id: r.selected_option_id,
-        selected_answer: optionText(q, r.selected_option_id),
-        is_correct: r.is_correct,
-        correct_option_id: a?.correct_option_id ?? null,
-        correct_answer: a?.correct_answer ?? null,
-        explanation: a?.explanation ?? null,
-      };
-    });
-    return ok({ items, ...meta });
+    const { items, total } = await listAttempts(supabase, { type, date, from, to });
+    return ok({ items, page, limit, total });
   });
 }
