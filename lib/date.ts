@@ -58,6 +58,20 @@ export function formatKoreanMonth(month: string): string {
   return `${month.slice(0, 4)}년 ${Number(month.slice(5, 7))}월`;
 }
 
+const seoulDateTime = new Intl.DateTimeFormat("ko-KR", {
+  timeZone: "Asia/Seoul",
+  month: "long",
+  day: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
+
+/** 화면 표시용 시각(서울): 2026-11-03T05:05:00Z → 11월 3일 14:05 */
+export function formatKoreanDateTime(iso: string): string {
+  return seoulDateTime.format(new Date(iso));
+}
+
 /** 화면 표시용: 2026-11-03 → 11월 3일 (화) */
 export function formatKoreanDate(date: string): string {
   const d = new Date(`${date}T00:00:00Z`);

@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import { api, ClientApiError, errorMessage } from "@/lib/api/client";
 import { formatKoreanDate, todayKST } from "@/lib/date";
 import type { HanjaDetail, HanjaProgress, LearningRecord, LearningStatus } from "@/lib/hanja";
+import { AttemptHistory } from "./attempt-history";
+import { QuizCard } from "./quiz-card";
+import { ReviewPanel } from "./review-panel";
 
 type Notice = { kind: "success" | "error" | "info"; text: string } | null;
 type HistoryResult = { items: LearningRecord[]; total: number };
@@ -31,6 +34,7 @@ export function HanjaBoard() {
   const [notice, setNotice] = useState<Notice>(null);
   const [busy, setBusy] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [answerToken, setAnswerToken] = useState(0);
 
   const loading = loadedToken !== token;
   const reload = () => setToken((t) => t + 1);
@@ -203,11 +207,14 @@ export function HanjaBoard() {
         )}
       </section>
 
-      {/* 퀴즈는 다음 단계 */}
-      <section className="rounded-lg border border-dashed border-gray-300 bg-white p-4 text-sm text-gray-600 sm:p-6">
-        <h2 className="text-lg font-bold text-gray-900">오늘의 퀴즈</h2>
-        <p className="mt-1">오늘 배정된 한자로 푸는 4지선다 퀴즈와 월요일 오답 복습은 다음 단계에서 제공됩니다. (개발 중)</p>
-      </section>
+      {/* 오늘 배정이 바뀌면 퀴즈를 새로 불러옴 */}
+      <QuizCard key={rec?.learning_id ?? "none"} hasToday={!!rec} onAnswered={() => {
+          setAnswerToken((t) => t + 1);
+          reload(); // 진행 현황(풀이 수·정답률) 갱신
+        }}
+      />
+
+      <ReviewPanel />
 
       {/* 진행 현황 */}
       <section className="rounded-lg bg-white p-4 shadow sm:p-6" aria-labelledby="hanja-progress">
@@ -250,6 +257,8 @@ export function HanjaBoard() {
           <p className="mt-2 text-xs text-gray-500">첫 학습일 {formatKoreanDate(progress.first_learning_date)}</p>
         )}
       </section>
+
+      <AttemptHistory refreshToken={answerToken} />
 
       {/* 지난 한자 */}
       <section className="rounded-lg bg-white p-4 shadow sm:p-6" aria-labelledby="hanja-history">
