@@ -40,6 +40,9 @@ export function SiteHeader() {
           <Link href="/ledger" className={linkClass}>
             가계부
           </Link>
+          <Link href="/hanja" className={linkClass}>
+            한자
+          </Link>
           {status === "signed_in" && (
             <Link href="/account" className={linkClass}>
               내 계정
