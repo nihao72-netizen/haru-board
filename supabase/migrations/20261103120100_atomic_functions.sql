@@ -31,6 +31,8 @@
 -- =============================================================================
 
 grant usage on schema app_private to authenticated;
+-- 앞으로 이 스키마에 만들어지는 함수도 기본 PUBLIC 실행 권한을 갖지 않도록 함
+alter default privileges in schema app_private revoke execute on functions from public;
 
 -- 서울 기준 오늘 날짜
 create or replace function app_private.today_kst()

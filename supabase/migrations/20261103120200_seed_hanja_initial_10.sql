@@ -1,13 +1,12 @@
 -- =============================================================================
 -- 하루정리 — 초기 한자 10자 시드 (PRD 0장 4항, 4.5, 4.6)
--- 상태: ★ 승인 전 초안 ★ docs/hanja-candidates.md 검토·승인 후 적용.
+-- 상태: 2026-11-03 사용자 승인 (천자문 첫 10자). 마이그레이션으로 적용 이력 관리.
 -- 후보: 천자문 첫 두 구절 + 다음 구절 첫 두 글자
 --   天地玄黃 (천지현황) 宇宙洪荒 (우주홍황) 日月 (일월)
 -- 한자당 정확히 1문제 (PRD v1.3 4.6). 재실행해도 중복되지 않도록 ON CONFLICT 사용.
--- SQL Editor(관리자 권한)에서 실행.
+-- supabase db push로 적용. 재실행해도 중복 생성되지 않음.
 -- =============================================================================
 
-begin;
 
 -- 1) 한자 10자
 insert into public.hanja_characters (character, reading, meaning, explanation, difficulty, sort_order) values
@@ -111,4 +110,3 @@ select c.id, v.qtype, v.qtext, v.options::jsonb, v.answer, v.expl
   join public.hanja_characters c on c.character = v.character
  where not exists (select 1 from public.quiz_questions q where q.character_id = c.id);
 
-commit;
