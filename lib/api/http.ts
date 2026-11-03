@@ -1,4 +1,5 @@
 import type { PostgrestError, SupabaseClient, User } from "@supabase/supabase-js";
+import { unstable_rethrow } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 /** PRD 8.1/8.5 표준 응답 형식 */
@@ -29,6 +30,8 @@ export async function handle(fn: () => Promise<Response>): Promise<Response> {
   try {
     return await fn();
   } catch (e) {
+    // Next.js 내부 신호(동적 렌더링 전환 등)는 잡지 않고 그대로 전달
+    unstable_rethrow(e);
     if (e instanceof ApiError) return fail(e.status, e.code, e.message);
     console.error("[api] unexpected error", e);
     return fail(500, "INTERNAL_ERROR", "서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");

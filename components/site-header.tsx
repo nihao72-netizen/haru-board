@@ -37,6 +37,9 @@ export function SiteHeader() {
           <Link href="/todos" className={linkClass}>
             할 일
           </Link>
+          <Link href="/ledger" className={linkClass}>
+            가계부
+          </Link>
           {status === "signed_in" && (
             <Link href="/account" className={linkClass}>
               내 계정
