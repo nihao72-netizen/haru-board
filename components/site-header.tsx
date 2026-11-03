@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { ReminderWatcher } from "./reminder-watcher";
 
 type AuthStatus = "unknown" | "signed_in" | "signed_out";
 
@@ -53,6 +54,7 @@ export function SiteHeader() {
               내 계정
             </Link>
           )}
+          {status === "signed_in" && <ReminderWatcher />}
           {status === "signed_out" && (
             <Link href="/login" className={`${linkClass} text-blue-700`}>
               로그인

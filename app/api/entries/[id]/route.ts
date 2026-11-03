@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { ApiError, dbError, handle, noContent, ok, readJson, requireUser } from "@/lib/api/http";
-import { ENTRY_COLUMNS, parseEntryUpdate } from "@/lib/entries";
+import { checkParent, ENTRY_COLUMNS, parseEntryUpdate } from "@/lib/entries";
 import { requireUuid } from "@/lib/validate";
 
 const notFound = () => new ApiError(404, "NOT_FOUND", "기록을 찾을 수 없습니다.");
@@ -23,6 +23,17 @@ export async function PATCH(request: NextRequest, ctx: RouteContext<"/api/entrie
     const id = requireUuid((await ctx.params).id, "id");
     const { supabase } = await requireUser();
     const patch = parseEntryUpdate(await readJson(request));
+    if (typeof patch.parent_id === "string") await checkParent(supabase, patch.parent_id, id);
+    if (patch.type === "memo") {
+      // 메모로 바꾸려면 하위 작업이 아니고 하위 작업도 없어야 함
+      const [{ data: cur }, { count }] = await Promise.all([
+        supabase.from("entries").select("parent_id").eq("id", id).maybeSingle(),
+        supabase.from("entries").select("id", { count: "exact", head: true }).eq("parent_id", id),
+      ]);
+      if ((cur?.parent_id && patch.parent_id !== null) || (count ?? 0) > 0) {
+        throw new ApiError(400, "VALIDATION_ERROR", "하위 작업과 연결된 할 일은 메모로 바꿀 수 없습니다.");
+      }
+    }
 
     // 메모에 완료 처리 요청은 거부 (유형을 함께 todo로 바꾸는 경우는 허용)
     if (typeof patch.is_completed === "boolean" && patch.type !== "todo") {
@@ -45,7 +56,7 @@ export async function PATCH(request: NextRequest, ctx: RouteContext<"/api/entrie
   });
 }
 
-/** DELETE /api/entries/{id} — 삭제 (204) */
+/** DELETE /api/entries/{id} — 삭제 (204). 하위 작업은 DB가 함께 삭제 */
 export async function DELETE(_request: NextRequest, ctx: RouteContext<"/api/entries/[id]">) {
   return handle(async () => {
     const id = requireUuid((await ctx.params).id, "id");
