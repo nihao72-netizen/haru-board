@@ -150,7 +150,11 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<publishable 키>
   npx supabase@2.58.5 db push
   ```
 
-- 평가용 환경과 같이 쓰려면 Supabase Auth 설정에서 Confirm Email을 끄고, Site URL과 Redirect URLs에 배포 주소와 `/auth/callback`을 등록합니다.
+- 평가용 환경과 같이 쓰려면 Supabase 대시보드의 Authentication 설정을 다음과 같이 맞춥니다.
+  - **Sign In / Providers → Email:** Confirm email 끄기
+  - **URL Configuration → Site URL:** 배포 주소 (예: `https://haru-board-navy.vercel.app`)
+  - **URL Configuration → Redirect URLs:** `https://<배포 주소>/**`, `http://localhost:3000/**`
+  - 비밀번호 재설정 링크는 `/auth/callback?next=/reset-password`로 돌아오므로, 주소 뒤에 `/**`를 붙여 하위 경로와 쿼리까지 허용합니다.
 
 | 명령 | 용도 |
 |---|---|
