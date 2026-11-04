@@ -90,31 +90,101 @@ function Status({ loading, error, ready }: { loading: boolean; error: string | n
 }
 
 // ─────────────────────────── 오늘 ───────────────────────────
+const PREVIEW = 5;
+
+/** 접고 펼 수 있는 묶음. limit이 있으면 처음 n개만 보여 주고 '더 보기' */
+function Group(
+  props: ViewProps & {
+    id: string;
+    title: string;
+    tone: string;
+    items: Task[];
+    showDate?: boolean;
+    limit?: number;
+    empty: string;
+    children?: React.ReactNode;
+  },
+) {
+  const [open, setOpen] = useState(true);
+  const [all, setAll] = useState(false);
+  const shown = props.limit && !all ? props.items.slice(0, props.limit) : props.items;
+  const more = props.items.length - shown.length;
+  return (
+    <section id={props.id} className="mt-6 scroll-mt-4" aria-label={props.title}>
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className={`flex w-full items-center gap-2 border-b border-gray-200 pb-1 text-left text-sm font-bold ${props.tone}`}
+      >
+        <span className="w-3 text-xs text-gray-400" aria-hidden="true">
+          {open ? "▼" : "▶"}
+        </span>
+        {props.title}
+        <span className="font-normal text-gray-500">{props.items.length}</span>
+      </button>
+      {open && (
+        <>
+          {props.items.length === 0 && <p className="px-5 py-2 text-sm text-gray-400">{props.empty}</p>}
+          <TaskList {...props} items={shown} showDate={props.showDate} />
+          {more > 0 && (
+            <button type="button" onClick={() => setAll(true)} className="mt-1 px-5 py-1 text-sm text-gray-500 hover:text-gray-800 hover:underline">
+              {more}개 더 보기 ▼
+            </button>
+          )}
+          {all && props.limit && props.items.length > props.limit && (
+            <button type="button" onClick={() => setAll(false)} className="mt-1 px-5 py-1 text-sm text-gray-500 hover:text-gray-800 hover:underline">
+              접기 ▲
+            </button>
+          )}
+          {props.children}
+        </>
+      )}
+    </section>
+  );
+}
+
 export function TodayView(props: ViewProps) {
   const { today } = props;
-  const open = useTasks(`/api/entries?type=todo&status=incomplete&from=2000-01-01&to=${today}&top_level=true&sort=schedule&with_subtasks=true&limit=500`, props.reloadToken);
+  const open = useTasks(`/api/entries?type=todo&status=incomplete&from=2000-01-01&top_level=true&sort=schedule&with_subtasks=true&limit=500`, props.reloadToken);
   const done = useTasks(`/api/entries?type=todo&status=completed&date=${today}&top_level=true&with_subtasks=true&limit=100`, props.reloadToken);
   const [showDone, setShowDone] = useState(false);
-  const overdue = open.items.filter((t) => t.record_date < today && !props.hidden.has(t.id));
-  const todays = open.items.filter((t) => t.record_date === today && !props.hidden.has(t.id));
-  const count = overdue.length + todays.length;
+  const visible = open.items.filter((t) => !props.hidden.has(t.id));
+  const overdue = visible.filter((t) => t.record_date < today);
+  const todays = visible.filter((t) => t.record_date === today);
+  const later = visible.filter((t) => t.record_date > today);
+  const jump = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const stat = "flex-1 rounded-lg px-3 py-2 text-left ring-1 hover:brightness-95";
 
   return (
     <div>
       <h2 className="text-2xl font-bold">오늘</h2>
-      <p className="mt-1 text-sm text-gray-500">✓ {count}개 작업</p>
+      <p className="mt-1 text-sm text-gray-500">{groupLabel(today, today)}</p>
+      <div className="mt-3 flex gap-2 text-sm" aria-label="요약">
+        <button type="button" onClick={() => jump("g-overdue")} className={`${stat} bg-red-50 ring-red-100`}>
+          <span className="block text-xs text-red-700">기한 지난 일</span>
+          <span className="text-lg font-bold text-red-800">{overdue.length}</span>
+        </button>
+        <button type="button" onClick={() => jump("g-today")} className={`${stat} bg-green-50 ring-green-100`}>
+          <span className="block text-xs text-green-700">오늘 해야 할 일</span>
+          <span className="text-lg font-bold text-green-800">{todays.length}</span>
+        </button>
+        <button type="button" onClick={() => jump("g-later")} className={`${stat} bg-purple-50 ring-purple-100`}>
+          <span className="block text-xs text-purple-700">남은 일</span>
+          <span className="text-lg font-bold text-purple-800">{later.length}</span>
+        </button>
+      </div>
       <Status {...open} />
-      {overdue.length > 0 && (
-        <section className="mt-5" aria-label="기한 지남">
-          <h3 className="border-b border-gray-200 pb-1 text-sm font-bold text-red-700">기한 지남 · {overdue.length}</h3>
-          <TaskList {...props} items={overdue} showDate />
-        </section>
-      )}
-      <section className="mt-5" aria-label="오늘 할 일">
-        <h3 className="border-b border-gray-200 pb-1 text-sm font-bold">{groupLabel(today, today)}</h3>
-        <TaskList {...props} items={todays} />
+      {/* 처음 불러오기 전에는 빈 안내('없습니다')를 보이지 않음 */}
+      {open.ready && (
+        <>
+      <Group {...props} id="g-overdue" title="기한 지난 일" tone="text-red-700" items={overdue} showDate limit={PREVIEW} empty="기한 지난 일이 없습니다. 👍" />
+      <Group {...props} id="g-today" title="오늘 해야 할 일" tone="text-green-800" items={todays} empty="오늘 할 일이 없습니다.">
         <AddInline {...props} date={today} />
-      </section>
+      </Group>
+      <Group {...props} id="g-later" title="남은 일 (내일 이후)" tone="text-purple-800" items={later} showDate limit={PREVIEW} empty="예정된 일이 없습니다." />
+        </>
+      )}
       {done.items.length > 0 && (
         <section className="mt-5">
           <button type="button" aria-expanded={showDone} onClick={() => setShowDone((v) => !v)} className="text-sm text-gray-500 hover:underline">
