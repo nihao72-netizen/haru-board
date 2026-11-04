@@ -9,6 +9,7 @@ import { formatKoreanDate, formatKoreanMonth, todayKST } from "@/lib/date";
 import { formatWon } from "@/lib/format";
 import { relativeDateLabel, timeLabel } from "@/lib/quick-parse";
 import { createClient } from "@/lib/supabase/client";
+import { FortuneCard } from "@/components/fortune-card";
 import { Landing } from "./landing";
 import { CheckCircle, dateTimeLabel, dateTone } from "./todos/todo-shared";
 
@@ -156,17 +157,8 @@ export function HomeDashboard({ header }: { header: React.ReactNode }) {
             <p className="mt-1 text-xs text-gray-500">하루 기록을 모아 보고 일기를 남겨요.</p>
           </Link>
 
-          {/* 준비 중인 기능 */}
-          <section aria-labelledby="home-fortune" className={`${card} bg-gradient-to-br from-lavender/60 via-white to-blush/50 ring-1 ring-purple-100`}>
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 id="home-fortune" className="font-bold">
-                🔮 오늘의 운세
-              </h2>
-              <span className="rounded-full bg-lavender px-2 py-0.5 text-xs font-semibold text-lavender-deep">Coming soon</span>
-            </div>
-            <p className="mt-2 text-sm text-gray-700">매일 새로운 운세를 준비하고 있어요.</p>
-            <p className="mt-1 text-xs text-gray-500">곧 만나요!</p>
-          </section>
+          {/* 오늘의 운세 (재미로 보는 운세, 생년월일은 이 기기에만 저장) */}
+          <FortuneCard variant="compact" />
         </div>
       </div>
     </>
