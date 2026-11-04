@@ -96,6 +96,8 @@ export function dbError(
       return new ApiError(401, "UNAUTHORIZED", "로그인이 필요합니다.");
     case "HB403":
       return new ApiError(403, "FORBIDDEN", error.message);
+    case "HB428":
+      return new ApiError(403, "REAUTH_REQUIRED", "일기 내용을 보려면 비밀번호를 다시 입력해 주세요.");
     case "HB404":
       return new ApiError(404, "NOT_FOUND", error.message);
     case "HB409":

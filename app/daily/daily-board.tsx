@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api, errorMessage } from "@/lib/api/client";
-import type { DailyReview, DailySummary } from "@/lib/daily";
+import type { DailySummary } from "@/lib/daily";
 import { addDays, formatKoreanDate, formatKoreanDateTime, todayKST } from "@/lib/date";
 import { formatSignedWon, formatWon } from "@/lib/format";
+import { DiaryEditor, DiaryList } from "./diary";
 
 const buttonClass = "rounded px-3 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50";
 const card = "rounded-lg bg-white p-4 shadow sm:p-6";
@@ -18,6 +19,16 @@ export function DailyBoard() {
   const [summary, setSummary] = useState<DailySummary | null>(null);
   const [loadedKey, setLoadedKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // 일기 잠금 해제 만료 시각 (비밀번호 재확인 후 10분), 목록에서 고른 횟수, 목록 새로고침
+  const [unlockUntil, setUnlockUntil] = useState<number | null>(null);
+  const [prompt, setPrompt] = useState<{ date: string; n: number }>({ date: "", n: 0 });
+  const [listToken, setListToken] = useState(0);
+
+  useEffect(() => {
+    if (unlockUntil === null) return;
+    const t = setTimeout(() => setUnlockUntil(null), Math.max(0, unlockUntil - Date.now()));
+    return () => clearTimeout(t);
+  }, [unlockUntil]);
 
   const key = `${date}#${token}`;
   const loading = loadedKey !== key;
@@ -219,7 +230,26 @@ export function DailyBoard() {
           </section>
 
           {/* 5. 자유 일기 */}
-          <DiaryEditor key={date} date={date} diary={s.diary} onSaved={() => setToken((t) => t + 1)} />
+          <DiaryEditor
+            key={date}
+            date={date}
+            diary={s.diary}
+            unlock={{ until: unlockUntil, set: setUnlockUntil }}
+            promptToken={prompt.date === date ? prompt.n : 0}
+            onSaved={() => {
+              setToken((t) => t + 1);
+              setListToken((t) => t + 1);
+            }}
+          />
+
+          <DiaryList
+            token={listToken}
+            current={date}
+            onOpen={(d) => {
+              setDate(d);
+              setPrompt((p) => ({ date: d, n: p.n + 1 }));
+            }}
+          />
 
           <p className="text-center text-xs text-gray-500">
             기록을 고치려면{" "}
@@ -239,94 +269,5 @@ export function DailyBoard() {
         </>
       )}
     </div>
-  );
-}
-
-function DiaryEditor(props: { date: string; diary: DailyReview | null; onSaved: () => void }) {
-  const [content, setContent] = useState(props.diary?.content ?? "");
-  const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<{ kind: "success" | "error"; text: string } | null>(null);
-  const changed = content !== (props.diary?.content ?? "");
-
-  async function save() {
-    if (!content.trim()) return setMessage({ kind: "error", text: "일기 내용을 입력해 주세요." });
-    setBusy(true);
-    try {
-      await api("/api/daily-reviews", { method: "PUT", body: JSON.stringify({ review_date: props.date, content }) });
-      setMessage({ kind: "success", text: "일기를 저장했습니다." });
-      props.onSaved();
-    } catch (e) {
-      setMessage({ kind: "error", text: `저장하지 못했습니다: ${errorMessage(e)}` });
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function remove() {
-    if (!window.confirm("이날의 일기를 삭제할까요? 할 일·가계부 등 다른 기록은 그대로 남습니다.")) return;
-    setBusy(true);
-    try {
-      await api(`/api/daily-reviews?date=${props.date}`, { method: "DELETE" });
-      setContent("");
-      setMessage({ kind: "success", text: "일기를 삭제했습니다." });
-      props.onSaved();
-    } catch (e) {
-      setMessage({ kind: "error", text: `삭제하지 못했습니다: ${errorMessage(e)}` });
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <section className={card} aria-labelledby="d-diary">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id="d-diary" className="text-lg font-bold">
-          자유 일기
-        </h2>
-        {props.diary && (
-          <span className="text-xs text-gray-500">마지막 저장 {formatKoreanDateTime(props.diary.updated_at)}</span>
-        )}
-      </div>
-      <label htmlFor="diary" className="sr-only">
-        일기 내용
-      </label>
-      <textarea
-        id="diary"
-        rows={6}
-        maxLength={10000}
-        value={content}
-        placeholder="오늘 하루를 자유롭게 적어 보세요."
-        onChange={(e) => {
-          setContent(e.target.value);
-          setMessage(null);
-        }}
-        className="mt-3 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-      />
-      {message && (
-        <p role={message.kind === "error" ? "alert" : "status"} className={`mt-2 text-sm ${message.kind === "error" ? "text-red-700" : "text-green-700"}`}>
-          {message.text}
-        </p>
-      )}
-      <div className="mt-3 flex gap-2">
-        <button
-          type="button"
-          disabled={busy || !changed}
-          onClick={save}
-          className={`${buttonClass} bg-blue-600 text-white hover:bg-blue-700`}
-        >
-          {busy ? "저장 중…" : props.diary ? "수정 저장" : "저장"}
-        </button>
-        {props.diary && (
-          <button
-            type="button"
-            disabled={busy}
-            onClick={remove}
-            className={`${buttonClass} bg-white text-red-700 ring-1 ring-red-200 hover:bg-red-50`}
-          >
-            삭제
-          </button>
-        )}
-      </div>
-    </section>
   );
 }

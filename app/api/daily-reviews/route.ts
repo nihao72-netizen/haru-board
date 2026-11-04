@@ -3,7 +3,10 @@ import { ApiError, dbError, handle, noContent, ok, readJson, requireUser } from 
 import { DAILY_REVIEW_COLUMNS, parseDateParam, parseDiaryPut } from "@/lib/daily";
 import { todayKST } from "@/lib/date";
 
-/** GET /api/daily-reviews?date=YYYY-MM-DD (기본 오늘) — 그날 일기, 없으면 data: null (PRD 8.12) */
+/**
+ * GET /api/daily-reviews?date=YYYY-MM-DD (기본 오늘) — 그날 일기의 제목·날짜(본문 제외), 없으면 data: null (PRD 8.12)
+ * 본문은 GET /api/daily-reviews/content (비밀번호 재확인 필요)
+ */
 export async function GET(request: NextRequest) {
   return handle(async () => {
     const { supabase } = await requireUser();
@@ -15,8 +18,9 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * PUT /api/daily-reviews — {"review_date":"2026-11-03","content":"..."} 저장(UPSERT). 생성 201, 수정 200.
- * DB는 content 컬럼만 UPDATE 권한을 주므로 PostgREST upsert 대신 '수정 → 없으면 생성' 순서로 처리한다.
+ * PUT /api/daily-reviews — {"review_date":"2026-11-03","title":"...","content":"..."} 저장(UPSERT). 생성 201, 수정 200.
+ * DB는 title·content 컬럼만 UPDATE 권한을 주므로 PostgREST upsert 대신 '수정 → 없으면 생성' 순서로 처리한다.
+ * 응답에는 본문을 넣지 않는다 (본문 SELECT 권한 없음).
  */
 export async function PUT(request: NextRequest) {
   return handle(async () => {
@@ -26,7 +30,7 @@ export async function PUT(request: NextRequest) {
     const update = () =>
       supabase
         .from("daily_reviews")
-        .update({ content: input.content })
+        .update({ content: input.content, ...("title" in input ? { title: input.title } : {}) })
         .eq("review_date", input.review_date)
         .select(DAILY_REVIEW_COLUMNS)
         .maybeSingle();

@@ -4,14 +4,11 @@ import type { Entry, EntryCategory } from "@/lib/entries";
 import type { LearningRecord } from "@/lib/hanja";
 import type { Transaction } from "@/lib/ledger";
 import type { AttemptRecord } from "@/lib/quiz";
-import { isDateString, requireDate, requireText } from "@/lib/validate";
+import { isDateString, optionalText, requireDate, requireText } from "@/lib/validate";
+import { DAILY_REVIEW_COLUMNS, DIARY_MAX, DIARY_TITLE_MAX, type DailyReview } from "@/lib/diary";
 
-export type DailyReview = { id: string; review_date: string; content: string; created_at: string; updated_at: string };
-
-export const DAILY_REVIEW_COLUMNS = "id, review_date, content, created_at, updated_at";
-
-/** 일기 본문 최대 길이 */
-export const DIARY_MAX = 10_000;
+export { DAILY_REVIEW_COLUMNS, DIARY_MAX, DIARY_TITLE_MAX };
+export type { DailyReview, DiaryWithContent } from "@/lib/diary";
 
 export type NamedEntry = Entry & { category_name: string | null };
 export type NamedTransaction = Transaction & { category_name: string | null };
@@ -80,10 +77,12 @@ export function parseDateParam(v: string | null, fallback: string): string {
   return date;
 }
 
+/** title: 없으면(undefined) 기존 제목 유지, null·빈 문자열이면 제목 없음 */
 export function parseDiaryPut(body: Record<string, unknown>) {
   return {
     review_date: requireDate(body.review_date, "일기 날짜"),
     content: requireText(body.content, "일기 내용", DIARY_MAX),
+    ...(body.title === undefined ? {} : { title: optionalText(body.title, "일기 제목", DIARY_TITLE_MAX) }),
   };
 }
 
