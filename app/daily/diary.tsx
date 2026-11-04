@@ -254,7 +254,7 @@ export function DiaryEditor(props: { date: string; diary: DailyReview | null; un
           </label>
           <textarea
             id="diary"
-            rows={6}
+            rows={10}
             maxLength={DIARY_MAX}
             value={content}
             placeholder="오늘 하루를 자유롭게 적어 보세요."
