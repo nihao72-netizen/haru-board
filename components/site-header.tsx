@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { isSampleEmail } from "@/lib/sample";
 import { ReminderWatcher } from "./reminder-watcher";
-import { SampleBanner } from "./sample-ui";
+import { SampleBanner, SampleButton } from "./sample-ui";
 
 type AuthStatus = "unknown" | "signed_in" | "signed_out";
 
@@ -77,7 +77,11 @@ export function SiteHeader() {
               <Link href="/login" className={`${linkClass} text-blue-700`}>
                 로그인
               </Link>
-              <Link href="/signup" className="ml-1 shrink-0 whitespace-nowrap rounded-xl bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-blue-700">
+              <SampleButton
+                label="👀 샘플 확인"
+                className="ml-1 shrink-0 whitespace-nowrap rounded-xl bg-gradient-to-r from-pink-300 via-rose-200 to-yellow-200 px-3 py-1.5 text-sm font-bold text-gray-900 shadow-sm ring-1 ring-pink-300 hover:from-pink-400 hover:to-yellow-300 disabled:opacity-60"
+              />
+              <Link href="/signup" className="shrink-0 whitespace-nowrap rounded-xl bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-blue-700">
                 무료로 시작하기
               </Link>
             </>
