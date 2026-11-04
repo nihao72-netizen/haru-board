@@ -95,7 +95,7 @@ export function HomeDashboard({ header }: { header: React.ReactNode }) {
       <div className="mt-8 grid gap-4 lg:grid-cols-3">
         <TodoCard data={data} today={today} onChanged={reload} />
 
-        <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1 lg:content-start">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 lg:content-start">
           <Link href="/ledger" className={`${card} block hover:ring-2 hover:ring-blue-200`}>
             <h2 className="font-bold">가계부</h2>
             <dl className="mt-2 space-y-1 text-sm">
@@ -155,6 +155,18 @@ export function HomeDashboard({ header }: { header: React.ReactNode }) {
             </p>
             <p className="mt-1 text-xs text-gray-500">하루 기록을 모아 보고 일기를 남겨요.</p>
           </Link>
+
+          {/* 준비 중인 기능 */}
+          <section aria-labelledby="home-fortune" className={`${card} bg-gradient-to-br from-lavender/60 via-white to-blush/50 ring-1 ring-purple-100`}>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 id="home-fortune" className="font-bold">
+                🔮 오늘의 운세
+              </h2>
+              <span className="rounded-full bg-lavender px-2 py-0.5 text-xs font-semibold text-lavender-deep">Coming soon</span>
+            </div>
+            <p className="mt-2 text-sm text-gray-700">매일 새로운 운세를 준비하고 있어요.</p>
+            <p className="mt-1 text-xs text-gray-500">곧 만나요!</p>
+          </section>
         </div>
       </div>
     </>

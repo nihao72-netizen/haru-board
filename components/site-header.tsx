@@ -66,6 +66,16 @@ export function SiteHeader() {
           <Link href="/daily" className={linkClass}>
             하루 마무리
           </Link>
+          {/* 준비 중인 메뉴: 누를 수 없고 'Coming soon' 표시 */}
+          <span
+            role="link"
+            aria-disabled="true"
+            title="오늘의 운세는 준비 중이에요."
+            className="inline-flex shrink-0 cursor-default items-center gap-1 whitespace-nowrap rounded px-2 py-1 text-sm font-medium text-gray-400"
+          >
+            🔮 오늘의 운세
+            <span className="rounded-full bg-lavender px-1.5 py-0.5 text-[10px] font-semibold leading-none text-lavender-deep">Coming soon</span>
+          </span>
           {status === "signed_in" && (
             <Link href="/account" className={linkClass}>
               내 계정
