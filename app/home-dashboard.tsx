@@ -58,6 +58,18 @@ export function HomeDashboard({ header }: { header: React.ReactNode }) {
 
   const reload = () => setToken((t) => t + 1);
 
+  // 로그인·로그아웃(예: 소개 화면의 '샘플 확인')이 일어나면 다시 불러온다
+  useEffect(() => {
+    const supabase = createClient();
+    if (!supabase) return;
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT") return;
+      setSignedOut(false);
+      setToken((t) => t + 1);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
   if (signedOut) return <Landing />;
   if (error && !data) {
     return (

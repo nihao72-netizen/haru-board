@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { SampleButton } from "@/components/sample-ui";
 
 /**
  * 로그인 전 소개 화면 (design.md 4장)
@@ -181,12 +182,16 @@ export function Landing() {
             <Link href="/signup" className={primaryButton}>
               무료로 시작하기
             </Link>
-            <a href="#preview" className={secondaryButton}>
+            <SampleButton className={secondaryButton} label="샘플 확인" />
+          </div>
+          <p className="mt-3 text-sm text-gray-500">
+            <b className="font-medium text-gray-700">샘플 확인</b>은 가입 없이 예시 데이터로 채워진 화면을 둘러보는 보기 전용 모드예요.
+          </p>
+          <p className="mt-2 text-sm text-gray-500">
+            <a href="#preview" className="font-medium text-blue-700 underline-offset-2 hover:underline">
               앱 미리보기
             </a>
-          </div>
-          <p className="mt-4 text-sm text-gray-500">
-            이미 계정이 있나요?{" "}
+            {" · "}이미 계정이 있나요?{" "}
             <Link href="/login" className="font-medium text-blue-700 underline-offset-2 hover:underline">
               로그인
             </Link>
@@ -228,9 +233,12 @@ export function Landing() {
           첫 번째 할 일을 지금 만들어 보세요.
         </h2>
         <p className="mt-2 text-gray-600">이메일만 있으면 바로 시작할 수 있어요.</p>
-        <Link href="/signup" className={`${primaryButton} mt-6`}>
-          무료로 시작하기
-        </Link>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <Link href="/signup" className={primaryButton}>
+            무료로 시작하기
+          </Link>
+          <SampleButton className={secondaryButton} label="먼저 샘플 둘러보기" />
+        </div>
       </section>
 
       <footer className="border-t border-gray-200 py-8 text-sm text-gray-500">

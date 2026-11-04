@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
 import { AuthCard, Field, NoticeBox, SubmitButton, translateAuthError, type Notice } from "@/components/auth-ui";
+import { isSampleEmail } from "@/lib/sample";
 import { createClient } from "@/lib/supabase/client";
 import { SUPABASE_NOT_CONFIGURED_MESSAGE, isSupabaseConfigured } from "@/lib/supabase/env";
 
-type SessionState = "checking" | "valid" | "missing" | "not_configured";
+type SessionState = "checking" | "valid" | "missing" | "not_configured" | "sample";
 
 export default function ResetPasswordPage() {
   const [sessionState, setSessionState] = useState<SessionState>(
@@ -21,7 +22,8 @@ export default function ResetPasswordPage() {
     if (!supabase) return;
     // 재설정 링크 → /auth/callback에서 세션 교환 후 이 페이지로 온다. 서버에서 세션을 검증한다.
     supabase.auth.getUser().then(({ data }) => {
-      setSessionState(data.user ? "valid" : "missing");
+      // 샘플 계정은 비밀번호를 바꿀 수 없다 (DB 트리거가 막음) — 폼 대신 안내
+      setSessionState(!data.user ? "missing" : isSampleEmail(data.user.email) ? "sample" : "valid");
     });
   }, []);
 
@@ -67,6 +69,15 @@ export default function ResetPasswordPage() {
           />
           <Link href="/forgot-password" className="block text-center text-sm text-blue-600 hover:underline">
             비밀번호 재설정 다시 요청하기
+          </Link>
+        </div>
+      )}
+
+      {sessionState === "sample" && (
+        <div className="space-y-4">
+          <NoticeBox notice={{ type: "error", text: "샘플 계정은 비밀번호를 바꿀 수 없어요. 직접 쓰려면 내 계정을 만들어 주세요." }} />
+          <Link href="/" className="block text-center text-sm font-medium text-blue-600 hover:underline">
+            홈으로 이동
           </Link>
         </div>
       )}

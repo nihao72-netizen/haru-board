@@ -4,21 +4,26 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { isSampleEmail } from "@/lib/sample";
 import { ReminderWatcher } from "./reminder-watcher";
+import { SampleBanner } from "./sample-ui";
 
 type AuthStatus = "unknown" | "signed_in" | "signed_out";
 
 export function SiteHeader() {
   const [status, setStatus] = useState<AuthStatus>(isSupabaseConfigured ? "unknown" : "signed_out");
+  const [sample, setSample] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
     if (!supabase) return;
     supabase.auth.getSession().then(({ data }) => {
       setStatus(data.session ? "signed_in" : "signed_out");
+      setSample(isSampleEmail(data.session?.user.email));
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       setStatus(session ? "signed_in" : "signed_out");
+      setSample(isSampleEmail(session?.user.email));
     });
     return () => sub.subscription.unsubscribe();
   }, []);
@@ -27,6 +32,7 @@ export function SiteHeader() {
     "shrink-0 whitespace-nowrap rounded px-2 py-1 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900";
 
   return (
+    <>
     <header className="border-b border-gray-200 bg-white">
       <nav className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-2 gap-y-1 px-4 py-3">
         <Link href="/" className="shrink-0 text-lg font-bold text-gray-900">
@@ -68,5 +74,7 @@ export function SiteHeader() {
         </div>
       </nav>
     </header>
+    {status === "signed_in" && sample && <SampleBanner />}
+    </>
   );
 }

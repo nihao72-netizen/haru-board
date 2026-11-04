@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { api, ClientApiError, errorMessage } from "@/lib/api/client";
 import { DIARY_MAX, DIARY_TITLE_MAX, DIARY_UNLOCK_MS, type DailyReview, type DiaryWithContent } from "@/lib/diary";
 import { formatKoreanDate, formatKoreanDateTime } from "@/lib/date";
+import { isSampleEmail, SAMPLE_PASSWORD } from "@/lib/sample";
 import { createClient } from "@/lib/supabase/client";
 
 const buttonClass = "rounded px-3 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50";
@@ -17,6 +18,18 @@ export type Unlock = { until: number | null; set: (until: number | null) => void
 /** 비밀번호 재확인 창: 같은 이메일로 다시 로그인해 '최근 비밀번호 확인' 세션을 만든다 */
 export function UnlockDialog(props: { onClose: () => void; onUnlocked: () => void }) {
   const [password, setPassword] = useState("");
+  const [sample, setSample] = useState(false);
+
+  // 샘플 계정이면 공개 비밀번호를 미리 채워 바로 열어 볼 수 있게 한다
+  useEffect(() => {
+    createClient()
+      ?.auth.getUser()
+      .then(({ data }) => {
+        if (!isSampleEmail(data.user?.email)) return;
+        setSample(true);
+        setPassword(SAMPLE_PASSWORD);
+      });
+  }, []);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,6 +72,7 @@ export function UnlockDialog(props: { onClose: () => void; onUnlocked: () => voi
           🔒 비밀번호 확인
         </h2>
         <p className="mt-1 text-sm text-gray-600">일기 내용을 보려면 로그인 비밀번호를 한 번 더 입력해 주세요.</p>
+        {sample && <p className="mt-1 text-sm text-lavender-deep">샘플 계정이라 비밀번호를 미리 넣어 두었어요. 확인을 눌러 보세요.</p>}
         <label htmlFor="unlock-password" className="sr-only">
           비밀번호
         </label>
