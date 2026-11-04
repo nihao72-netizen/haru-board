@@ -1,6 +1,6 @@
 import { dbError, handle, ok, requireUser } from "@/lib/api/http";
 import { budgetLine, fetchTransactionsInRange, findMonthlyBudget, parseMonth } from "@/lib/budget";
-import { withCategoryName, type Dashboard } from "@/lib/daily";
+import { HOME_PREVIEW, mergeByDistance, withCategoryName, type Dashboard } from "@/lib/daily";
 import { todayKST } from "@/lib/date";
 import { ENTRY_COLUMNS, type Entry, type EntryCategory } from "@/lib/entries";
 import { findLearning } from "@/lib/hanja";
@@ -19,9 +19,16 @@ export async function GET() {
     const { month, first, start, end } = parseMonth(today.slice(0, 7));
     const todo = () => supabase.from("entries").select(ENTRY_COLUMNS, { count: "exact" }).eq("type", "todo");
     const count = () => supabase.from("entries").select("id", { count: "exact", head: true }).eq("type", "todo");
+    // 홈 세 칸용 (하위 작업 제외)
+    const top = () => todo().is("parent_id", null);
+    const topCount = () => count().is("parent_id", null);
+    const todayStart = `${today}T00:00:00+09:00`;
 
-    const [focus, completedToday, todayTotal, todayDone, previousOpen, cats, monthTx, monthly, learning, reviews, diary] =
-      await Promise.all([
+    const [
+      [focus, completedToday, todayTotal, todayDone, previousOpen, cats, monthTx, monthly, learning, reviews, diary],
+      [homeDone, homeToday, homeOverdue, homeLater, doneTodayCount, todayOpenCount, overdueCount, laterCount],
+    ] = await Promise.all([
+      Promise.all([
         // 강조 목록: 미완료 (오늘 + 이전). 오래된 것부터
         todo()
           .eq("is_completed", false)
@@ -45,8 +52,39 @@ export async function GET() {
         findLearning(supabase, "learning_date", today),
         supabase.from("weekly_reviews").select("id", { count: "exact", head: true }).neq("status", "completed"),
         supabase.from("daily_reviews").select("id", { count: "exact", head: true }).eq("review_date", today),
-      ]);
-    for (const r of [focus, completedToday, todayTotal, todayDone, previousOpen, cats, reviews, diary]) {
+      ]),
+      // 홈 세 칸 (각 5개)
+      Promise.all([
+        top().eq("is_completed", true).order("updated_at", { ascending: false }).order("id").limit(HOME_PREVIEW),
+        top()
+          .eq("is_completed", false)
+          .eq("record_date", today)
+          .order("scheduled_time", { ascending: true, nullsFirst: false })
+          .order("priority", { ascending: true })
+          .order("created_at", { ascending: true })
+          .limit(HOME_PREVIEW),
+        top()
+          .eq("is_completed", false)
+          .lt("record_date", today)
+          .order("record_date", { ascending: false })
+          .order("scheduled_time", { ascending: true, nullsFirst: false })
+          .order("priority", { ascending: true })
+          .limit(HOME_PREVIEW),
+        top()
+          .eq("is_completed", false)
+          .gt("record_date", today)
+          .order("record_date", { ascending: true })
+          .order("scheduled_time", { ascending: true, nullsFirst: false })
+          .order("priority", { ascending: true })
+          .limit(HOME_PREVIEW),
+        topCount().eq("is_completed", true).gte("updated_at", todayStart),
+        topCount().eq("is_completed", false).eq("record_date", today),
+        topCount().eq("is_completed", false).lt("record_date", today),
+        topCount().eq("is_completed", false).gt("record_date", today),
+      ]),
+    ]);
+    const results = [focus, completedToday, todayTotal, todayDone, previousOpen, cats, reviews, diary];
+    for (const r of [...results, homeDone, homeToday, homeOverdue, homeLater, doneTodayCount, todayOpenCount, overdueCount, laterCount]) {
       if (r.error) throw dbError(r.error);
     }
 
@@ -74,6 +112,17 @@ export async function GET() {
           today_completed: done,
           today_incomplete: total - done,
           previous_incomplete: previousOpen.count ?? 0,
+        },
+        home: {
+          done: withCategoryName((homeDone.data ?? []) as Entry[], names),
+          today: withCategoryName((homeToday.data ?? []) as Entry[], names),
+          pending: withCategoryName(mergeByDistance((homeOverdue.data ?? []) as Entry[], (homeLater.data ?? []) as Entry[], today, HOME_PREVIEW), names),
+          counts: {
+            done_today: doneTodayCount.count ?? 0,
+            today: todayOpenCount.count ?? 0,
+            overdue: overdueCount.count ?? 0,
+            later: laterCount.count ?? 0,
+          },
         },
       },
       categories,

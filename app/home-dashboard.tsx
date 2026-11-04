@@ -7,7 +7,9 @@ import type { BudgetStatus } from "@/lib/budget";
 import type { Dashboard, NamedEntry } from "@/lib/daily";
 import { formatKoreanDate, formatKoreanMonth, todayKST } from "@/lib/date";
 import { formatWon } from "@/lib/format";
+import { relativeDateLabel, timeLabel } from "@/lib/quick-parse";
 import { createClient } from "@/lib/supabase/client";
+import { CheckCircle, dateTimeLabel, dateTone } from "./todos/todo-shared";
 
 const card = "rounded-lg bg-white p-4 shadow sm:p-6";
 const budgetMeta: Record<BudgetStatus, { label: string; className: string }> = {
@@ -172,11 +174,11 @@ export function HomeDashboard() {
 }
 
 function TodoCard({ data, today, onChanged }: { data: Dashboard; today: string; onChanged: () => void }) {
-  const { todos, categories } = data;
+  const { categories } = data;
+  const home = data.todos.home;
   const [title, setTitle] = useState("");
   const defaultCategory = categories.find((c) => c.name === "일상")?.id ?? categories[0]?.id ?? "";
   const [categoryId, setCategoryId] = useState(defaultCategory);
-  const [showDone, setShowDone] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState<{ kind: "success" | "error"; text: string } | null>(null);
   const selectedCategory = categories.some((c) => c.id === categoryId) ? categoryId : defaultCategory;
@@ -213,7 +215,8 @@ function TodoCard({ data, today, onChanged }: { data: Dashboard; today: string; 
     }
   }
 
-  const c = todos.counts;
+  const c = home.counts;
+  const row = (t: NamedEntry, meta: React.ReactNode) => <TodoRow key={t.id} t={t} meta={meta} busy={busyId === t.id} onToggle={() => toggle(t)} />;
   return (
     <section className={`${card} lg:col-span-2`} aria-labelledby="home-todos">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -224,10 +227,6 @@ function TodoCard({ data, today, onChanged }: { data: Dashboard; today: string; 
           전체 보기 →
         </Link>
       </div>
-      <p className="mt-1 text-sm text-gray-600">
-        오늘 {c.today_total}개 · 완료 {c.today_completed} · 미완료 {c.today_incomplete}
-        {c.previous_incomplete > 0 && <span className="ml-1 font-semibold text-amber-800">· 이전 미완료 {c.previous_incomplete}</span>}
-      </p>
 
       <form onSubmit={add} className="mt-4 flex flex-wrap gap-2">
         <label htmlFor="quick-todo" className="sr-only">
@@ -267,53 +266,76 @@ function TodoCard({ data, today, onChanged }: { data: Dashboard; today: string; 
         </p>
       )}
 
-      {todos.focus.length === 0 ? (
-        <p className="mt-4 rounded bg-gray-50 p-4 text-center text-sm text-gray-600">남은 할 일이 없습니다. 👏</p>
-      ) : (
-        <ul className="mt-4 divide-y divide-gray-100">
-          {todos.focus.map((t) => (
-            <TodoRow key={t.id} t={t} today={today} busy={busyId === t.id} onToggle={() => toggle(t)} />
-          ))}
-        </ul>
-      )}
+      <div className="mt-5 space-y-5">
+        <TodoSection id="home-done" title="한 일" tone="text-gray-700" summary={`오늘 ${c.done_today}개 완료 · 최근 완료순`} href="/todos?view=all" empty="아직 완료한 일이 없어요.">
+          {home.done.map((t) => row(t, <span className="text-gray-500">{doneLabel(t.updated_at, today)}</span>))}
+        </TodoSection>
 
-      {todos.completed_today.length > 0 && (
-        <div className="mt-4">
-          <button type="button" aria-expanded={showDone} onClick={() => setShowDone((v) => !v)} className="text-sm text-gray-600 underline">
-            오늘 완료한 일 {todos.completed_today.length}개 {showDone ? "접기 ▲" : "펼치기 ▼"}
-          </button>
-          {showDone && (
-            <ul className="mt-2 divide-y divide-gray-100">
-              {todos.completed_today.map((t) => (
-                <TodoRow key={t.id} t={t} today={today} busy={busyId === t.id} onToggle={() => toggle(t)} />
-              ))}
-            </ul>
+        <TodoSection id="home-today" title="오늘 할 일" tone="text-green-700" summary={`${c.today}개 남음 · 시간순`} href="/todos?view=today" empty="오늘 할 일을 모두 끝냈어요. 👏">
+          {home.today.map((t) => row(t, t.scheduled_time ? <span className="text-green-700">{timeLabel(t.scheduled_time)}</span> : null))}
+        </TodoSection>
+
+        <TodoSection
+          id="home-pending"
+          title="해야 될 일"
+          tone="text-purple-700"
+          summary={
+            <>
+              {c.overdue > 0 && <span className="font-semibold text-red-700">기한 지남 {c.overdue} · </span>}
+              내일 이후 {c.later} · 가까운 날짜순
+            </>
+          }
+          href="/todos?view=today"
+          empty="남은 일이 없어요."
+        >
+          {home.pending.map((t) =>
+            row(
+              t,
+              <span className={dateTone(t.record_date, today)}>
+                {t.record_date < today && "⚠ "}
+                {dateTimeLabel(t.record_date, t.scheduled_time, today)}
+              </span>,
+            ),
           )}
-        </div>
-      )}
+        </TodoSection>
+      </div>
     </section>
   );
 }
 
-function TodoRow({ t, today, busy, onToggle }: { t: NamedEntry; today: string; busy: boolean; onToggle: () => void }) {
-  const previous = t.record_date < today;
+const seoulDate = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" });
+const seoulClock = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Seoul", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+
+/** 완료한 때 (마지막 수정 시각 기준): 오늘이면 시각, 아니면 어제·날짜 */
+function doneLabel(iso: string, today: string) {
+  const d = new Date(iso);
+  const date = seoulDate.format(d);
+  return date === today ? `오늘 ${timeLabel(seoulClock.format(d))}` : relativeDateLabel(date, today);
+}
+
+function TodoSection(props: { id: string; title: string; tone: string; summary: React.ReactNode; href: string; empty: string; children: React.ReactNode[] }) {
   return (
-    <li className="flex items-center gap-3 py-2.5">
-      <input
-        type="checkbox"
-        checked={!!t.is_completed}
-        disabled={busy}
-        onChange={onToggle}
-        aria-label={`${t.title} ${t.is_completed ? "완료 취소" : "완료"}`}
-        className="h-5 w-5 shrink-0 accent-blue-600"
-      />
-      <span className={`min-w-0 flex-1 break-words text-base ${t.is_completed ? "text-gray-500 line-through" : "text-gray-900"}`}>
-        {t.title}
-      </span>
-      {previous && (
-        <span className="shrink-0 rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-900">{formatKoreanDate(t.record_date)}</span>
-      )}
-      {t.due_date && <span className="shrink-0 text-xs text-gray-500">마감 {formatKoreanDate(t.due_date)}</span>}
+    <section aria-labelledby={props.id}>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-gray-200 pb-1">
+        <h3 id={props.id} className={`text-base font-bold ${props.tone}`}>
+          {props.title}
+          <span className="ml-2 text-xs font-normal text-gray-500">{props.summary}</span>
+        </h3>
+        <Link href={props.href} className="text-xs text-blue-700 hover:underline">
+          전체 보기 →
+        </Link>
+      </div>
+      {props.children.length === 0 ? <p className="py-3 text-sm text-gray-500">{props.empty}</p> : <ul className="divide-y divide-gray-100">{props.children}</ul>}
+    </section>
+  );
+}
+
+function TodoRow({ t, meta, busy, onToggle }: { t: NamedEntry; meta: React.ReactNode; busy: boolean; onToggle: () => void }) {
+  return (
+    <li className="flex items-start gap-3 py-2">
+      <CheckCircle priority={t.priority} done={!!t.is_completed} title={t.title ?? ""} disabled={busy} onToggle={onToggle} />
+      <span className={`min-w-0 flex-1 break-words text-sm ${t.is_completed ? "text-gray-500 line-through" : "text-gray-900"}`}>{t.title}</span>
+      {meta && <span className="shrink-0 text-xs">{meta}</span>}
       {t.category_name && <span className="hidden shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600 sm:inline">{t.category_name}</span>}
     </li>
   );
