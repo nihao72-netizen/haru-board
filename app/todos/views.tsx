@@ -195,15 +195,15 @@ export function TodayView(props: ViewProps) {
       <div className="mt-4 flex gap-2 text-sm" aria-label="요약">
         <button type="button" onClick={() => jump("g-today")} className={`${stat} bg-mint ring-green-100`}>
           <span className="block text-xs text-success">오늘 해야 할 일</span>
-          <span className="text-lg font-bold text-success">{todays.length}</span>
+          <span className="text-lg font-bold text-success">{open.ready ? todays.length : "–"}</span>
         </button>
         <button type="button" onClick={() => jump("g-overdue")} className={`${stat} bg-red-50 ring-red-100`}>
           <span className="block text-xs text-red-700">기한 지난 일</span>
-          <span className="text-lg font-bold text-red-800">{overdue.length}</span>
+          <span className="text-lg font-bold text-red-800">{open.ready ? overdue.length : "–"}</span>
         </button>
         <button type="button" onClick={() => jump("g-later")} className={`${stat} bg-lavender ring-purple-100`}>
           <span className="block text-xs text-lavender-deep">남은 일</span>
-          <span className="text-lg font-bold text-lavender-deep">{later.length}</span>
+          <span className="text-lg font-bold text-lavender-deep">{open.ready ? later.length : "–"}</span>
         </button>
       </div>
       <Status {...open} />
