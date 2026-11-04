@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { todayKST } from "@/lib/date";
 import { fortuneFor, validBirth, type Fortune } from "@/lib/fortune";
@@ -19,6 +20,7 @@ function Stars({ n, label }: { n: number; label: string }) {
 
 /** 생년월일(이 기기에 저장)과 오늘 날짜로 운세를 보여 준다. compact: 홈 카드, full: 운세 화면 */
 export function FortuneCard({ variant }: { variant: "compact" | "full" }) {
+  const router = useRouter();
   const today = todayKST();
   const [user, setUser] = useState<string | null>(null);
   const [birth, setBirth] = useState<string | null>(null);
@@ -50,16 +52,33 @@ export function FortuneCard({ variant }: { variant: "compact" | "full" }) {
     setError(null);
   }
 
-  const card = variant === "compact" ? "rounded-lg p-4 shadow sm:p-6" : "rounded-2xl p-5 shadow sm:p-8";
+  const compact = variant === "compact";
+  const card = compact ? "rounded-lg p-4 shadow sm:p-6 cursor-pointer hover:ring-2 hover:ring-blue-200" : "rounded-2xl p-5 shadow sm:p-8";
   const shell = `${card} bg-gradient-to-br from-lavender/60 via-white to-blush/50 ring-1 ring-purple-100`;
+  // 홈 요약 칸: 다른 칸처럼 어디를 눌러도 운세 화면으로 (입력창·버튼·링크를 누를 때는 제외)
+  const openFull = (e: React.MouseEvent) => {
+    if (!compact || (e.target as HTMLElement).closest("a, button, input, label, form")) return;
+    router.push("/fortune");
+  };
+  /** 제목: 홈 요약 칸에서는 운세 화면 링크 */
+  const title = (extra?: React.ReactNode) => (
+    <h2 id={`fortune-${variant}`} className={compact ? "font-bold" : "text-xl font-bold"}>
+      {compact ? (
+        <Link href="/fortune" className="hover:underline">
+          🔮 오늘의 운세
+        </Link>
+      ) : (
+        "🔮 오늘의 운세"
+      )}
+      {extra}
+    </h2>
+  );
   if (!user) return <section className={shell} aria-busy="true" aria-label="오늘의 운세 불러오는 중" />;
 
   if (!birth || editing) {
     return (
-      <section aria-labelledby={`fortune-${variant}`} className={shell}>
-        <h2 id={`fortune-${variant}`} className={variant === "compact" ? "font-bold" : "text-xl font-bold"}>
-          🔮 오늘의 운세
-        </h2>
+      <section aria-labelledby={`fortune-${variant}`} className={shell} onClick={openFull}>
+        {title()}
         <p className="mt-2 text-sm text-gray-700">생년월일을 입력하면 띠와 별자리에 맞춘 오늘의 운세를 볼 수 있어요.</p>
         <form onSubmit={save} className="mt-3 flex flex-wrap items-center gap-2">
           <label htmlFor={`birth-${variant}`} className="sr-only">
@@ -99,11 +118,13 @@ export function FortuneCard({ variant }: { variant: "compact" | "full" }) {
   const f: Fortune = fortuneFor(birth, today);
   const [, mm, dd] = today.split("-").map(Number);
   return (
-    <section aria-labelledby={`fortune-${variant}`} className={shell}>
+    <section aria-labelledby={`fortune-${variant}`} className={shell} onClick={openFull}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id={`fortune-${variant}`} className={variant === "compact" ? "font-bold" : "text-xl font-bold"}>
-          🔮 오늘의 운세 <span className="text-sm font-normal text-gray-500">{mm}월 {dd}일</span>
-        </h2>
+        {title(
+          <span className="ml-1 text-sm font-normal text-gray-500">
+            {mm}월 {dd}일
+          </span>,
+        )}
         <span className="text-xs text-gray-600">
           {f.animal.emoji} {f.animal.name}띠 · {f.sign.symbol} {f.sign.name}
         </span>
