@@ -42,8 +42,8 @@ function AddInline(props: ViewProps & { date: string; categoryId?: string; label
   const [open, setOpen] = useState(false);
   if (!open) {
     return (
-      <button type="button" onClick={() => setOpen(true)} className="mt-1 flex items-center gap-2 px-1 py-1.5 text-sm text-gray-500 hover:text-red-600">
-        <span className="text-lg leading-none text-red-600">＋</span> {props.label ?? "작업 추가"}
+      <button type="button" onClick={() => setOpen(true)} className="mt-1 flex min-h-11 items-center gap-2 px-1 py-1.5 text-sm text-gray-500 hover:text-blue-700">
+        <span className="text-lg leading-none text-blue-600">＋</span> {props.label ?? "작업 추가"}
       </button>
     );
   }
@@ -155,34 +155,73 @@ export function TodayView(props: ViewProps) {
   const later = visible.filter((t) => t.record_date > today);
   const jump = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   const stat = "flex-1 rounded-lg px-3 py-2 text-left ring-1 hover:brightness-95";
+  // 오늘 진행률: 오늘 날짜 할 일 중 완료 수 (방금 완료해 숨긴 것도 완료로 셈)
+  const doneIds = new Set(done.items.map((t) => t.id));
+  const justDone = open.items.filter((t) => t.record_date === today && props.hidden.has(t.id) && !doneIds.has(t.id)).length;
+  const doneCount = done.items.length + justDone;
+  const total = todays.length + doneCount;
+  const percent = total === 0 ? 0 : Math.round((doneCount / total) * 100);
 
   return (
     <div>
-      <h2 className="text-2xl font-bold">오늘</h2>
-      <p className="mt-1 text-sm text-gray-500">{groupLabel(today, today)}</p>
-      <div className="mt-3 flex gap-2 text-sm" aria-label="요약">
-        <button type="button" onClick={() => jump("g-today")} className={`${stat} bg-green-50 ring-green-100`}>
-          <span className="block text-xs text-green-700">오늘 해야 할 일</span>
-          <span className="text-lg font-bold text-green-800">{todays.length}</span>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+        <h2 className="text-2xl font-bold">오늘의 할 일</h2>
+        <p className="text-sm text-gray-500">{groupLabel(today, today)}</p>
+      </div>
+      <p className="mt-1 text-sm text-gray-600">오늘도 하나씩 정리해 봐요.</p>
+
+      {/* 진행률: 숫자 + 막대 (색만으로 표시하지 않음) */}
+      {open.ready && done.ready && total > 0 && (
+        <div className="mt-4" aria-label="오늘 진행률">
+          <div className="flex items-baseline justify-between text-sm">
+            <span className="font-semibold text-gray-800">진행률</span>
+            <span className="text-gray-600">
+              <b className="text-gray-900">{doneCount}</b> / {total} 완료 · {percent}%
+            </span>
+          </div>
+          <div
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={total}
+            aria-valuenow={doneCount}
+            aria-valuetext={`${total}개 중 ${doneCount}개 완료`}
+            className="mt-1.5 h-2 overflow-hidden rounded-full bg-gray-100 ring-1 ring-gray-200"
+          >
+            <div className="progress-fill h-full rounded-full bg-blue-600" style={{ width: `${percent}%` }} />
+          </div>
+        </div>
+      )}
+
+      <div className="mt-4 flex gap-2 text-sm" aria-label="요약">
+        <button type="button" onClick={() => jump("g-today")} className={`${stat} bg-mint ring-green-100`}>
+          <span className="block text-xs text-success">오늘 해야 할 일</span>
+          <span className="text-lg font-bold text-success">{todays.length}</span>
         </button>
         <button type="button" onClick={() => jump("g-overdue")} className={`${stat} bg-red-50 ring-red-100`}>
           <span className="block text-xs text-red-700">기한 지난 일</span>
           <span className="text-lg font-bold text-red-800">{overdue.length}</span>
         </button>
-        <button type="button" onClick={() => jump("g-later")} className={`${stat} bg-purple-50 ring-purple-100`}>
-          <span className="block text-xs text-purple-700">남은 일</span>
-          <span className="text-lg font-bold text-purple-800">{later.length}</span>
+        <button type="button" onClick={() => jump("g-later")} className={`${stat} bg-lavender ring-purple-100`}>
+          <span className="block text-xs text-lavender-deep">남은 일</span>
+          <span className="text-lg font-bold text-lavender-deep">{later.length}</span>
         </button>
       </div>
       <Status {...open} />
       {/* 처음 불러오기 전에는 빈 안내('없습니다')를 보이지 않음 */}
       {open.ready && (
         <>
-          <Group {...props} id="g-today" title="오늘 해야 할 일" tone="text-green-800" items={todays} empty="오늘 할 일이 없습니다.">
+          <Group
+            {...props}
+            id="g-today"
+            title="오늘 해야 할 일"
+            tone="text-success"
+            items={todays}
+            empty={doneCount > 0 ? "오늘의 할 일을 모두 마쳤어요. 수고했어요!" : "아직 할 일이 없어요. 첫 번째 할 일을 추가해 보세요."}
+          >
             <AddInline {...props} date={today} />
           </Group>
-          <Group {...props} id="g-overdue" title="기한 지난 일" tone="text-red-700" items={overdue} showDate limit={PREVIEW} empty="기한 지난 일이 없습니다. 👍" />
-          <Group {...props} id="g-later" title="남은 일 (내일 이후)" tone="text-purple-800" items={later} showDate limit={PREVIEW} empty="예정된 일이 없습니다." />
+          <Group {...props} id="g-overdue" title="기한 지난 일" tone="text-red-700" items={overdue} showDate limit={PREVIEW} empty="기한 지난 일이 없어요." />
+          <Group {...props} id="g-later" title="남은 일 (내일 이후)" tone="text-lavender-deep" items={later} showDate limit={PREVIEW} empty="예정된 일이 없어요." />
         </>
       )}
       {done.items.length > 0 && (
@@ -262,7 +301,7 @@ export function UpcomingView(props: ViewProps) {
               type="button"
               disabled={past}
               onClick={() => jump(d)}
-              className={`rounded py-1 text-xs ${isToday ? "bg-red-600 font-bold text-white" : past ? "text-gray-300" : "text-gray-700 hover:bg-gray-100"}`}
+              className={`rounded py-1 text-xs ${isToday ? "bg-blue-600 font-bold text-white" : past ? "text-gray-300" : "text-gray-700 hover:bg-gray-100"}`}
             >
               <span className="block">{WEEK[new Date(`${d}T00:00:00Z`).getUTCDay()]}</span>
               <span className="block text-sm">{Number(d.slice(8))}</span>
@@ -344,9 +383,9 @@ export function CalendarView(props: ViewProps) {
               aria-selected={isSel}
               aria-label={`${relativeDateLabel(d, today)}, 작업 ${tasks.length}개`}
               onClick={() => setSelected(d)}
-              className={`flex min-h-[72px] flex-col border-b border-r border-gray-200 p-1 text-left align-top sm:min-h-[96px] ${inMonth ? "bg-white" : "bg-gray-50 text-gray-400"} ${isSel ? "ring-2 ring-inset ring-red-400" : "hover:bg-red-50/40"}`}
+              className={`flex min-h-[72px] flex-col border-b border-r border-gray-200 p-1 text-left align-top sm:min-h-[96px] ${inMonth ? "bg-white" : "bg-gray-50 text-gray-400"} ${isSel ? "ring-2 ring-inset ring-blue-400" : "hover:bg-red-50/40"}`}
             >
-              <span className={`mb-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full text-[11px] ${d === today ? "bg-red-600 font-bold text-white" : ""}`}>
+              <span className={`mb-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full text-[11px] ${d === today ? "bg-blue-600 font-bold text-white" : ""}`}>
                 {Number(d.slice(8))}
               </span>
               {tasks.slice(0, 3).map((t) => (

@@ -1,26 +1,142 @@
+/* Pretendard (한국어 본문 글꼴) — 필요한 글자만 내려받는 동적 부분 집합 */
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
 @import "tailwindcss";
 
+/*
+ * 디자인 토큰 (design.md 3장: Clean Minimal 75% + Soft Emotional 25%)
+ * 따뜻한 흰 바탕, 짙은 슬레이트 글자, 또렷한 파랑 주요 동작, 옅은 블러시·라벤더·민트 보조색.
+ * 파스텔은 장식·구분용이며 기본 글자색으로 쓰지 않는다.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-bg: #fafaf8;
+  --color-surface: #ffffff;
+  --color-surface-subtle: #f5f6f8;
+  --color-text: #242936;
+  --color-text-muted: #667085;
+  --color-border: #e5e7eb;
+  --color-primary: #4169e1;
+  --color-primary-hover: #3157c6;
+  --color-primary-soft: #eaf0ff;
+  --color-focus: #4169e1;
+
+  --duration-fast: 120ms;
+  --duration-base: 180ms;
+  --duration-gentle: 240ms;
+  --ease-ui: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@theme {
+  --font-sans: "Pretendard Variable", Pretendard, system-ui, -apple-system, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+
+  /* 주요 동작: 기존 blue-* 클래스가 그대로 새 파랑을 쓰도록 단계를 맞춤 */
+  --color-blue-50: #eaf0ff;
+  --color-blue-100: #dbe5ff;
+  --color-blue-200: #c2d2fb;
+  --color-blue-300: #9db4f4;
+  --color-blue-400: #6f8eea;
+  --color-blue-500: #5079e5;
+  --color-blue-600: #4169e1;
+  --color-blue-700: #3157c6;
+  --color-blue-800: #2a4aa6;
+  --color-blue-900: #243d85;
+
+  /* 중립색: 따뜻한 흰 바탕(50)·보조 면(100)·테두리(200)·보조 글자(500)·본문(900) */
+  --color-gray-50: #fafaf8;
+  --color-gray-100: #f5f6f8;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d0d5dd;
+  --color-gray-400: #98a2b3;
+  --color-gray-500: #667085;
+  --color-gray-600: #535b6b;
+  --color-gray-700: #3d4452;
+  --color-gray-800: #2e3442;
+  --color-gray-900: #242936;
+
+  /* 보조 감성색 (배경용 옅은 색 + 그 위에 올리는 진한 글자색) */
+  --color-blush: #f7dde2;
+  --color-blush-deep: #a64c63;
+  --color-lavender: #eae5fa;
+  --color-lavender-deep: #6554a4;
+  --color-mint: #ddf1e8;
+  --color-success: #23724e;
+  --color-danger: #b42318;
+  --color-primary: #4169e1;
+  --color-primary-hover: #3157c6;
+  --color-primary-soft: #eaf0ff;
+
+  /* 모양: 버튼·입력 12px, 카드 16px, 큰 카드 20~24px */
+  --radius: 0.75rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+
+  /* 그림자: 아주 옅게 + 1px 윤곽(배치에 영향 없음) */
+  --shadow: 0 0 0 1px rgb(28 39 60 / 0.06), 0 4px 16px rgb(28 39 60 / 0.05);
+  --shadow-sm: 0 0 0 1px rgb(28 39 60 / 0.05), 0 2px 10px rgb(28 39 60 / 0.04);
+  --shadow-lg: 0 12px 36px rgb(28 39 60 / 0.12);
+  --shadow-xl: 0 12px 36px rgb(28 39 60 / 0.14);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: var(--color-bg);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  letter-spacing: -0.01em;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+h1,
+h2 {
+  letter-spacing: -0.025em;
+}
+
+/* 키보드 초점은 항상 보이게 (마우스 클릭에는 표시하지 않음) */
+:where(a, button, [role="button"], [role="checkbox"], [role="tab"], summary, select):focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* 잔잔한 상태 변화 (명세 6장: 120~180ms) */
+:where(a, button, [role="button"], input, select, textarea) {
+  transition-property: color, background-color, border-color, box-shadow, opacity;
+  transition-duration: var(--duration-fast);
+  transition-timing-function: var(--ease-ui);
+}
+
+/* 완료 체크 표시: 살짝 커지며 나타남 */
+@keyframes check-pop {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.check-pop {
+  animation: check-pop var(--duration-gentle) var(--ease-ui);
+}
+
+/* 진행 막대 길이 변화 */
+.progress-fill {
+  transition: width var(--duration-gentle) var(--ease-ui);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

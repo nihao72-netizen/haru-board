@@ -97,7 +97,7 @@ export function TaskDetail(props: {
   async function remove() {
     if (!task) return;
     const n = subtasks.length;
-    if (!window.confirm(`'${task.title}'을(를) 삭제할까요?${n ? ` 하위 작업 ${n}개도 함께 삭제됩니다.` : ""} 되돌릴 수 없습니다.`)) return;
+    if (!window.confirm(`이 할 일을 삭제할까요?${n ? ` 하위 작업 ${n}개도 함께 삭제돼요.` : ""} 이 작업은 되돌릴 수 없어요.`)) return;
     try {
       await api(`/api/entries/${id}`, { method: "DELETE" });
       props.onChanged("작업을 삭제했습니다");
@@ -206,7 +206,7 @@ export function TaskDetail(props: {
                       />
                     </div>
                   ) : (
-                    <button type="button" onClick={() => setAdding(true)} className="mt-2 text-sm text-gray-500 hover:text-red-600">
+                    <button type="button" onClick={() => setAdding(true)} className="mt-2 text-sm text-gray-500 hover:text-blue-700">
                       ＋ 하위 작업 추가
                     </button>
                   )}

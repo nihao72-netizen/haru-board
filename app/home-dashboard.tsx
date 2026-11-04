@@ -9,6 +9,7 @@ import { formatKoreanDate, formatKoreanMonth, todayKST } from "@/lib/date";
 import { formatWon } from "@/lib/format";
 import { relativeDateLabel, timeLabel } from "@/lib/quick-parse";
 import { createClient } from "@/lib/supabase/client";
+import { Landing } from "./landing";
 import { CheckCircle, dateTimeLabel, dateTone } from "./todos/todo-shared";
 
 const card = "rounded-lg bg-white p-4 shadow sm:p-6";
@@ -21,39 +22,8 @@ const budgetMeta: Record<BudgetStatus, { label: string; className: string }> = {
 };
 const hanjaStatus = { assigned: "배정됨", studying: "학습 중", completed: "✓ 학습 완료" } as const;
 
-/** 로그인 전 소개 카드 (기존 홈 화면 내용) */
-function Intro() {
-  return (
-    <>
-      <div className="mt-8 grid gap-4 md:grid-cols-3">
-        <div className="rounded-lg bg-white p-6 shadow">
-          <h2 className="text-xl font-bold">할 일</h2>
-          <p>오늘 해야 할 일을 관리합니다.</p>
-        </div>
-
-        <div className="rounded-lg bg-white p-6 shadow">
-          <h2 className="text-xl font-bold">가계부</h2>
-          <p>매일의 지출을 기록합니다.</p>
-        </div>
-
-        <div className="rounded-lg bg-white p-6 shadow">
-          <h2 className="text-xl font-bold">천자문</h2>
-          <p>한자를 공부하고 복습합니다.</p>
-        </div>
-      </div>
-      <div className="mt-6 flex gap-2">
-        <Link href="/login" className="rounded bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
-          로그인
-        </Link>
-        <Link href="/signup" className="rounded bg-white px-4 py-2 text-sm font-semibold text-gray-800 shadow hover:bg-gray-50">
-          회원가입
-        </Link>
-      </div>
-    </>
-  );
-}
-
-export function HomeDashboard() {
+/** 로그인하면 제목(header) + 오늘의 대시보드, 로그인 전이면 소개(랜딩) 화면 */
+export function HomeDashboard({ header }: { header: React.ReactNode }) {
   const today = todayKST();
   const [token, setToken] = useState(0);
   const [data, setData] = useState<Dashboard | null>(null);
@@ -88,15 +58,18 @@ export function HomeDashboard() {
 
   const reload = () => setToken((t) => t + 1);
 
-  if (signedOut) return <Intro />;
+  if (signedOut) return <Landing />;
   if (error && !data) {
     return (
-      <div role="alert" className="mt-8 rounded-lg border border-red-200 bg-red-50 p-6 text-sm text-red-800">
-        오늘의 정보를 불러오지 못했습니다: {error}
-        <button type="button" className="ml-2 underline" onClick={reload}>
-          다시 시도
-        </button>
-      </div>
+      <>
+        {header}
+        <div role="alert" className="mt-8 rounded-lg border border-red-200 bg-red-50 p-6 text-sm text-red-800">
+          오늘의 정보를 불러오지 못했습니다: {error}
+          <button type="button" className="ml-2 underline" onClick={reload}>
+            다시 시도
+          </button>
+        </div>
+      </>
     );
   }
   if (!data) return <div className="mt-8 rounded-lg bg-white p-6 text-sm text-gray-500 shadow">불러오는 중…</div>;
@@ -105,71 +78,74 @@ export function HomeDashboard() {
   const budget = budgetMeta[finance.budget.status];
 
   return (
-    <div className="mt-8 grid gap-4 lg:grid-cols-3">
-      <TodoCard data={data} today={today} onChanged={reload} />
+    <>
+      {header}
+      <div className="mt-8 grid gap-4 lg:grid-cols-3">
+        <TodoCard data={data} today={today} onChanged={reload} />
 
-      <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1 lg:content-start">
-        <Link href="/ledger" className={`${card} block hover:ring-2 hover:ring-blue-200`}>
-          <h2 className="font-bold">가계부</h2>
-          <dl className="mt-2 space-y-1 text-sm">
-            <div className="flex justify-between gap-2">
-              <dt className="text-gray-500">오늘 수입</dt>
-              <dd className="font-medium text-blue-800">{formatWon(finance.today_income)}</dd>
-            </div>
-            <div className="flex justify-between gap-2">
-              <dt className="text-gray-500">오늘 지출</dt>
-              <dd className="font-medium text-red-800">{formatWon(finance.today_expense)}</dd>
-            </div>
-            <div className="flex justify-between gap-2 border-t border-gray-100 pt-1">
-              <dt className="text-gray-500">{Number(finance.month.slice(5))}월 지출</dt>
-              <dd className="font-medium">{formatWon(finance.month_expense)}</dd>
-            </div>
-          </dl>
-          <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-600">
-            <span className={`rounded px-1.5 py-0.5 font-semibold ${budget.className}`}>{budget.label}</span>
-            {finance.budget.budget !== null && (
-              <span>
-                {formatKoreanMonth(finance.month)} 예산 {formatWon(finance.budget.budget)} 중 {finance.budget.usage_rate}%
-              </span>
-            )}
-          </p>
-        </Link>
-
-        <Link href="/hanja" className={`${card} block hover:ring-2 hover:ring-blue-200`}>
-          <h2 className="font-bold">오늘의 한자</h2>
-          {hanja.today ? (
-            <p className="mt-2 flex items-center gap-3">
-              <span className="font-serif text-4xl" lang="zh-Hant">
-                {hanja.today.character.character}
-              </span>
-              <span className="text-sm">
-                {hanja.today.character.meaning} {hanja.today.character.reading}
-                <span className="mt-1 block text-xs text-gray-600">{hanjaStatus[hanja.today.status]}</span>
-              </span>
+        <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1 lg:content-start">
+          <Link href="/ledger" className={`${card} block hover:ring-2 hover:ring-blue-200`}>
+            <h2 className="font-bold">가계부</h2>
+            <dl className="mt-2 space-y-1 text-sm">
+              <div className="flex justify-between gap-2">
+                <dt className="text-gray-500">오늘 수입</dt>
+                <dd className="font-medium text-blue-800">{formatWon(finance.today_income)}</dd>
+              </div>
+              <div className="flex justify-between gap-2">
+                <dt className="text-gray-500">오늘 지출</dt>
+                <dd className="font-medium text-red-800">{formatWon(finance.today_expense)}</dd>
+              </div>
+              <div className="flex justify-between gap-2 border-t border-gray-100 pt-1">
+                <dt className="text-gray-500">{Number(finance.month.slice(5))}월 지출</dt>
+                <dd className="font-medium">{formatWon(finance.month_expense)}</dd>
+              </div>
+            </dl>
+            <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-600">
+              <span className={`rounded px-1.5 py-0.5 font-semibold ${budget.className}`}>{budget.label}</span>
+              {finance.budget.budget !== null && (
+                <span>
+                  {formatKoreanMonth(finance.month)} 예산 {formatWon(finance.budget.budget)} 중 {finance.budget.usage_rate}%
+                </span>
+              )}
             </p>
-          ) : (
-            <p className="mt-2 text-sm text-gray-600">아직 받지 않았어요. 눌러서 오늘의 한자를 받으세요.</p>
-          )}
-          <p className="mt-2 text-xs text-gray-600">
-            {hanja.open_review_count > 0 ? (
-              <span className="rounded bg-amber-100 px-1.5 py-0.5 font-semibold text-amber-900">
-                미완료 복습 {hanja.open_review_count}회차
-              </span>
-            ) : (
-              "미완료 복습 없음"
-            )}
-          </p>
-        </Link>
+          </Link>
 
-        <Link href="/daily" className={`${card} block hover:ring-2 hover:ring-blue-200`}>
-          <h2 className="font-bold">하루 마무리</h2>
-          <p className="mt-2 text-sm text-gray-700">
-            {data.diary.written ? "✓ 오늘 일기를 썼어요." : "오늘 일기를 아직 쓰지 않았어요."}
-          </p>
-          <p className="mt-1 text-xs text-gray-500">하루 기록을 모아 보고 일기를 남겨요.</p>
-        </Link>
+          <Link href="/hanja" className={`${card} block hover:ring-2 hover:ring-blue-200`}>
+            <h2 className="font-bold">오늘의 한자</h2>
+            {hanja.today ? (
+              <p className="mt-2 flex items-center gap-3">
+                <span className="font-serif text-4xl" lang="zh-Hant">
+                  {hanja.today.character.character}
+                </span>
+                <span className="text-sm">
+                  {hanja.today.character.meaning} {hanja.today.character.reading}
+                  <span className="mt-1 block text-xs text-gray-600">{hanjaStatus[hanja.today.status]}</span>
+                </span>
+              </p>
+            ) : (
+              <p className="mt-2 text-sm text-gray-600">아직 받지 않았어요. 눌러서 오늘의 한자를 받으세요.</p>
+            )}
+            <p className="mt-2 text-xs text-gray-600">
+              {hanja.open_review_count > 0 ? (
+                <span className="rounded bg-amber-100 px-1.5 py-0.5 font-semibold text-amber-900">
+                  미완료 복습 {hanja.open_review_count}회차
+                </span>
+              ) : (
+                "미완료 복습 없음"
+              )}
+            </p>
+          </Link>
+
+          <Link href="/daily" className={`${card} block hover:ring-2 hover:ring-blue-200`}>
+            <h2 className="font-bold">하루 마무리</h2>
+            <p className="mt-2 text-sm text-gray-700">
+              {data.diary.written ? "✓ 오늘 일기를 썼어요." : "오늘 일기를 아직 쓰지 않았어요."}
+            </p>
+            <p className="mt-1 text-xs text-gray-500">하루 기록을 모아 보고 일기를 남겨요.</p>
+          </Link>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

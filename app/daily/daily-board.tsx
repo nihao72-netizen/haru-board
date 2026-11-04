@@ -103,8 +103,8 @@ export function DailyBoard() {
       ) : (
         <>
           {/* 홈 화면처럼: 왼쪽(넓게) 자유 일기·내 일기 목록, 오른쪽 그날의 기록 */}
-          <div className="grid gap-6 lg:grid-cols-3 lg:items-start">
-            <div className="space-y-6 lg:col-span-2">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-start">
+            <div className="min-w-0 space-y-6 lg:col-span-2">
               {/* 자유 일기 */}
               <DiaryEditor
                 key={date}
@@ -128,7 +128,7 @@ export function DailyBoard() {
               />
             </div>
 
-            <aside className="space-y-4" aria-label="이날의 기록">
+            <aside className="min-w-0 space-y-4" aria-label="이날의 기록">
               {/* 이날의 기록: 할 일 */}
               <section className={side} aria-labelledby="d-todos">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">

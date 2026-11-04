@@ -56,9 +56,14 @@ export function SiteHeader() {
           )}
           {status === "signed_in" && <ReminderWatcher />}
           {status === "signed_out" && (
-            <Link href="/login" className={`${linkClass} text-blue-700`}>
-              로그인
-            </Link>
+            <>
+              <Link href="/login" className={`${linkClass} text-blue-700`}>
+                로그인
+              </Link>
+              <Link href="/signup" className="ml-1 shrink-0 whitespace-nowrap rounded-xl bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-blue-700">
+                무료로 시작하기
+              </Link>
+            </>
           )}
         </div>
       </nav>

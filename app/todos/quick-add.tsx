@@ -174,7 +174,7 @@ export function QuickAdd(props: {
           value={text}
           maxLength={200}
           aria-label={props.parentId ? "하위 작업 입력" : "할 일 입력"}
-          placeholder={props.placeholder ?? "예: 내일 오후 4시 수학 숙제 복습 p2 #공부"}
+          placeholder={props.placeholder ?? "무엇을 해야 하나요? (예: 내일 오후 4시 수학 숙제 p2 #공부)"}
           onChange={(e) => update(e.target.value)}
           onCompositionStart={() => (composing.current = true)}
           onCompositionEnd={(e) => {
@@ -231,7 +231,7 @@ export function QuickAdd(props: {
             onClick={() => void submit()}
             disabled={busy || !title}
             aria-label="추가"
-            className="rounded-md bg-red-600 px-3 py-1 text-sm font-bold text-white hover:bg-red-700 disabled:opacity-40"
+            className="rounded-md bg-blue-600 px-3 py-1 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-40"
           >
             {busy ? "…" : "↑"}
           </button>

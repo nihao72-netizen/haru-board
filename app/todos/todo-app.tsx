@@ -123,7 +123,7 @@ export function TodoApp() {
             first = !localStorage.getItem("haru:first-complete");
             localStorage.setItem("haru:first-complete", "1");
           } catch {}
-          showToast(first ? "🎉 첫 작업을 완료했어요!" : "작업을 완료했습니다", async () => {
+          showToast(first ? "잘했어요. 첫 할 일을 완료했어요." : "잘했어요. 한 가지를 완료했어요.", async () => {
             await api(`/api/entries/${task.id}`, { method: "PATCH", body: JSON.stringify({ is_completed: false }) }).catch(() => {});
             setHidden((h) => {
               const n = new Set(h);
@@ -150,7 +150,7 @@ export function TodoApp() {
   const onCreated = useCallback(
     (entry: Entry, createdCategory: boolean) => {
       if (createdCategory) setCatToken((t) => t + 1);
-      showToast(`'${entry.title}'을(를) 추가했습니다`);
+      showToast("할 일을 추가했어요.");
       reload();
     },
     [reload, showToast],
@@ -159,16 +159,16 @@ export function TodoApp() {
   const viewProps: ViewProps = { today, categories, reloadToken, hidden, onToggle: (t) => void toggle(t), onOpen: (id) => navigate({ task: id }), onCreated };
   const currentCat = view.startsWith("cat:") ? categories.find((c) => c.id === view.slice(4)) : undefined;
   const navClass = (active: boolean) =>
-    `flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md px-2.5 py-1.5 text-left text-sm md:w-full ${active ? "bg-red-50 font-semibold text-red-700" : "text-gray-700 hover:bg-gray-100"}`;
+    `flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md px-2.5 py-1.5 text-left text-sm md:w-full ${active ? "bg-blue-50 font-semibold text-blue-700" : "text-gray-700 hover:bg-gray-100"}`;
   const sortedCats = useMemo(() => [...categories].sort((a, b) => a.created_at.localeCompare(b.created_at)), [categories]);
 
   return (
     <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-start">
       {/* 사이드바 (좁은 화면에서는 위쪽 가로 메뉴) */}
-      <aside className="md:sticky md:top-4 md:w-56 md:shrink-0" aria-label="할 일 메뉴">
-        <div className="rounded-xl bg-[#fcfaf8] p-2 ring-1 ring-gray-200">
-          <button type="button" onClick={() => setQuickOpen(true)} className="mb-1 flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-sm font-semibold text-red-700 hover:bg-red-50">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-white">＋</span> 작업 추가
+      <aside className="md:sticky md:top-4 md:w-60 md:shrink-0" aria-label="할 일 메뉴">
+        <div className="rounded-xl bg-gray-100 p-2 ring-1 ring-gray-200">
+          <button type="button" onClick={() => setQuickOpen(true)} className="mb-1 flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white">＋</span> 작업 추가
             <kbd className="ml-auto hidden rounded border border-gray-200 px-1 text-[10px] font-normal text-gray-400 md:inline">Q</kbd>
           </button>
           <nav className="flex gap-1 overflow-x-auto md:flex-col">

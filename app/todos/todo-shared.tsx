@@ -48,10 +48,10 @@ export function CheckCircle(props: { priority: Priority; done: boolean; title: s
         props.onToggle();
       }}
       className={`group mt-0.5 flex shrink-0 items-center justify-center rounded-full border-2 ${size} ${p.ring} ${
-        props.done ? "bg-gray-400 !border-gray-400 text-white" : `${p.fill} ${p.text}`
+        props.done ? "!border-success bg-success text-white" : `${p.fill} ${p.text}`
       } disabled:opacity-50`}
     >
-      <span className={props.done ? "" : "opacity-0 group-hover:opacity-100"} aria-hidden="true">
+      <span className={props.done ? "check-pop" : "opacity-0 group-hover:opacity-100"} aria-hidden="true">
         ✓
       </span>
     </button>
@@ -81,7 +81,7 @@ export function TaskRow(props: {
         onKeyDown={(e) => {
           if (e.key === "Enter" && e.target === e.currentTarget) props.onOpen();
         }}
-        className="flex cursor-pointer items-start gap-3 rounded px-1 py-2.5 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
+        className="flex min-h-[52px] cursor-pointer items-start gap-3 rounded-md px-1 py-2.5 hover:bg-gray-100 focus-visible:bg-gray-100"
       >
         <CheckCircle priority={t.priority} done={done} title={t.title} onToggle={props.onToggle} disabled={props.busy} />
         <div className="min-w-0 flex-1">
