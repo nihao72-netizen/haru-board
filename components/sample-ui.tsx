@@ -45,10 +45,11 @@ export function SampleButton(props: { className?: string; label?: string }) {
 export function SampleBanner() {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
-  async function signUp() {
+  /** 샘플을 끝내고(로그아웃) 이동 */
+  async function leave(to: "/" | "/signup") {
     setBusy(true);
     await createClient()?.auth.signOut();
-    router.push("/signup");
+    router.push(to);
     router.refresh();
   }
   return (
@@ -58,14 +59,24 @@ export function SampleBanner() {
           <span aria-hidden="true">👀 </span>
           <b>샘플 보기 중이에요.</b> 둘러볼 수만 있고 내용은 바꿀 수 없어요.
         </p>
-        <button
-          type="button"
-          onClick={signUp}
-          disabled={busy}
-          className="rounded-xl bg-blue-600 px-3 py-1 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
-        >
-          {busy ? "이동 중…" : "내 계정 만들고 시작하기"}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => leave("/")}
+            disabled={busy}
+            className="rounded-xl bg-white px-3 py-1 text-sm font-semibold text-lavender-deep ring-1 ring-purple-200 hover:bg-purple-50 disabled:opacity-60"
+          >
+            처음 화면으로
+          </button>
+          <button
+            type="button"
+            onClick={() => leave("/signup")}
+            disabled={busy}
+            className="rounded-xl bg-blue-600 px-3 py-1 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+          >
+            {busy ? "이동 중…" : "내 계정 만들고 시작하기"}
+          </button>
+        </div>
       </div>
     </div>
   );

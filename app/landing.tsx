@@ -12,9 +12,9 @@ import { SampleButton } from "@/components/sample-ui";
 
 const primaryButton =
   "inline-flex min-h-11 items-center justify-center rounded-xl bg-blue-600 px-5 py-2.5 text-base font-semibold text-white shadow-sm hover:bg-blue-700";
-const secondaryButton =
-  "inline-flex min-h-11 items-center justify-center rounded-xl bg-white px-5 py-2.5 text-base font-semibold text-gray-800 ring-1 ring-gray-200 hover:bg-gray-100";
-
+/** 샘플 확인: 분홍→노랑 그라데이션으로 가장 눈에 띄게 (진한 글자로 대비 유지) */
+const sampleButton =
+  "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-pink-300 via-rose-200 to-yellow-200 px-5 py-2.5 text-base font-bold text-gray-900 shadow-md ring-1 ring-pink-300 hover:from-pink-400 hover:to-yellow-300";
 /** 히어로 오른쪽 목업: 오늘 화면의 축소판 (정적) */
 function HeroMockup() {
   const tasks = [
@@ -179,19 +179,35 @@ export function Landing() {
             할 일·가계부·한자 공부·일기를 한곳에 빠르게 기록하고, 중요한 일에 집중하세요.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
+            <SampleButton className={sampleButton} label="👀 샘플 확인" />
             <Link href="/signup" className={primaryButton}>
               무료로 시작하기
             </Link>
-            <SampleButton className={secondaryButton} label="샘플 확인" />
-          </div>
-          <p className="mt-3 text-sm text-gray-500">
-            <b className="font-medium text-gray-700">샘플 확인</b>은 가입 없이 예시 데이터로 채워진 화면을 둘러보는 보기 전용 모드예요.
-          </p>
-          <p className="mt-2 text-sm text-gray-500">
-            <a href="#preview" className="font-medium text-blue-700 underline-offset-2 hover:underline">
+            <a
+              href="#preview"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById("preview")?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-lavender px-5 py-2.5 text-base font-semibold text-lavender-deep ring-1 ring-purple-200 hover:bg-purple-100"
+            >
+              <span aria-hidden="true" className="flex h-6 w-6 items-center justify-center rounded-full bg-lavender-deep text-[11px] text-white">
+                ▶
+              </span>
               앱 미리보기
             </a>
-            {" · "}이미 계정이 있나요?{" "}
+          </div>
+          {/* 두 버튼 설명: 버튼과 같은 색으로 짝지어 굵게 */}
+          <ul className="mt-4 max-w-lg space-y-2 text-[15px] font-semibold text-gray-800">
+            <li className="rounded-xl bg-gradient-to-r from-pink-50 to-yellow-50 px-4 py-2.5 ring-1 ring-pink-200">
+              <span className="font-bold text-pink-700">👀 샘플 확인</span> — 가입 없이 예시 데이터로 채워진 화면을 둘러보는 <span className="text-pink-700">보기 전용 모드</span>예요.
+            </li>
+            <li className="rounded-xl bg-lavender/70 px-4 py-2.5 ring-1 ring-purple-200">
+              <span className="font-bold text-lavender-deep">▶ 앱 미리보기</span> — 이 페이지에서 <span className="text-lavender-deep">바로 눌러 보는 체험</span>이에요.
+            </li>
+          </ul>
+          <p className="mt-2 text-sm text-gray-500">
+            이미 계정이 있나요?{" "}
             <Link href="/login" className="font-medium text-blue-700 underline-offset-2 hover:underline">
               로그인
             </Link>
@@ -234,10 +250,10 @@ export function Landing() {
         </h2>
         <p className="mt-2 text-gray-600">이메일만 있으면 바로 시작할 수 있어요.</p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <SampleButton className={sampleButton} label="👀 먼저 샘플 둘러보기" />
           <Link href="/signup" className={primaryButton}>
             무료로 시작하기
           </Link>
-          <SampleButton className={secondaryButton} label="먼저 샘플 둘러보기" />
         </div>
       </section>
 
