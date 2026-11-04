@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { api, errorMessage } from "@/lib/api/client";
 import { todayKST } from "@/lib/date";
 import type { Entry, EntryCategory } from "@/lib/entries";
+import { CompletedPanel } from "./completed-panel";
 import { QuickAdd } from "./quick-add";
 import { TaskDetail } from "./task-detail";
 import { TodoBoard } from "./todo-board";
@@ -107,7 +108,13 @@ export function TodoApp() {
   const toggle = useCallback(
     async (task: Task) => {
       const completing = !task.is_completed;
-      if (completing) setHidden((h) => new Set(h).add(task.id));
+      // 완료: 목록에서 바로 숨김 / 완료 취소(오른쪽 완료 패널 등): 숨김 해제해서 목록에 다시 보이게
+      setHidden((h) => {
+        const n = new Set(h);
+        if (completing) n.add(task.id);
+        else n.delete(task.id);
+        return n;
+      });
       try {
         await api(`/api/entries/${task.id}`, { method: "PATCH", body: JSON.stringify({ is_completed: completing }) });
         if (completing) {
@@ -126,6 +133,7 @@ export function TodoApp() {
             reload();
           });
         }
+        if (!completing) showToast("완료를 취소했습니다");
         reload();
       } catch (e) {
         setHidden((h) => {
@@ -186,27 +194,32 @@ export function TodoApp() {
         </p>
       </aside>
 
-      <section className="min-w-0 flex-1 rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-100 sm:p-6" aria-live="polite">
-        {error && <p role="alert" className="mb-3 text-sm text-red-700">분류를 불러오지 못했습니다: {error}</p>}
-        {quickOpen && (
-          <div className="mb-5">
-            <QuickAdd
-              today={today}
-              categories={categories}
-              defaultDate={today}
-              defaultCategoryId={currentCat?.id}
-              autoFocus
-              onCreated={onCreated}
-              onCancel={() => setQuickOpen(false)}
-            />
-          </div>
-        )}
-        {view === "today" && <TodayView {...viewProps} />}
-        {view === "upcoming" && <UpcomingView {...viewProps} />}
-        {view === "calendar" && <CalendarView {...viewProps} />}
-        {view === "all" && <TodoBoard key={reloadToken} />}
-        {view.startsWith("cat:") && (currentCat ? <CategoryView {...viewProps} category={currentCat} /> : <p className="text-sm text-gray-500">분류를 불러오는 중…</p>)}
-      </section>
+      {/* 가운데 작업 목록 + 오른쪽 완료한 일 (넓은 화면에서 나란히, 좁으면 아래로) */}
+      <div className="flex min-w-0 flex-1 flex-col gap-4 xl:flex-row xl:items-start">
+        <section className="min-w-0 flex-1 rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-100 sm:p-6" aria-live="polite">
+          {error && <p role="alert" className="mb-3 text-sm text-red-700">분류를 불러오지 못했습니다: {error}</p>}
+          {quickOpen && (
+            <div className="mb-5">
+              <QuickAdd
+                today={today}
+                categories={categories}
+                defaultDate={today}
+                defaultCategoryId={currentCat?.id}
+                autoFocus
+                onCreated={onCreated}
+                onCancel={() => setQuickOpen(false)}
+              />
+            </div>
+          )}
+          {view === "today" && <TodayView {...viewProps} />}
+          {view === "upcoming" && <UpcomingView {...viewProps} />}
+          {view === "calendar" && <CalendarView {...viewProps} />}
+          {view === "all" && <TodoBoard key={reloadToken} />}
+          {view.startsWith("cat:") && (currentCat ? <CategoryView {...viewProps} category={currentCat} /> : <p className="text-sm text-gray-500">분류를 불러오는 중…</p>)}
+        </section>
+
+        <CompletedPanel today={today} categories={categories} reloadToken={reloadToken} onToggle={(t) => void toggle(t)} onOpen={(id) => navigate({ task: id })} />
+      </div>
 
       {taskId && (
         <TaskDetail

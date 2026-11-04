@@ -5,7 +5,7 @@ import { TodoApp } from "./todo-app";
 export default function TodosPage() {
   return (
     <main className="min-h-screen bg-gray-50 px-4 py-6 sm:p-10">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-7xl">
         <Link href="/" className="text-blue-600 hover:underline">
           ← 홈으로 돌아가기
         </Link>
