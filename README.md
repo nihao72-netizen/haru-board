@@ -39,6 +39,19 @@
 
 > 월요일 오답 복습은 **지난주에 틀린 문제**로 만들어집니다. 새 계정은 지난주 기록이 없으므로 처음에는 "아직 복습 회차가 없습니다"로 보입니다. 개발 중에는 관리자용 테스트 시드로 검증했습니다(아래 '검증' 참고).
 
+## 화면 미리보기
+
+배포 사이트의 '샘플 확인'(보기 전용) 화면입니다. 그림을 누르면 크게 볼 수 있습니다.
+
+<table>
+<tr><td width="50%"><a href="docs/screenshots/01-landing.jpg"><img src="docs/screenshots/01-landing.jpg" alt="로그인 전 소개 화면 — 샘플 확인·데모 목록"></a><br><sub>로그인 전 소개 화면 — 샘플 확인·데모 목록</sub></td><td width="50%"><a href="docs/screenshots/02-home.jpg"><img src="docs/screenshots/02-home.jpg" alt="홈 — 한 일·오늘 할 일·해야 될 일, 요약 카드"></a><br><sub>홈 — 한 일·오늘 할 일·해야 될 일, 요약 카드</sub></td></tr>
+<tr><td width="50%"><a href="docs/screenshots/03-todos-today.jpg"><img src="docs/screenshots/03-todos-today.jpg" alt="할 일 — 오늘의 할 일·진행률, 오른쪽 완료한 일"></a><br><sub>할 일 — 오늘의 할 일·진행률, 오른쪽 완료한 일</sub></td><td width="50%"><a href="docs/screenshots/04-todos-detail.jpg"><img src="docs/screenshots/04-todos-detail.jpg" alt="할 일 상세 — 날짜·시각·우선순위·미리 알림·하위 작업"></a><br><sub>할 일 상세 — 날짜·시각·우선순위·미리 알림·하위 작업</sub></td></tr>
+<tr><td width="50%"><a href="docs/screenshots/05-todos-calendar.jpg"><img src="docs/screenshots/05-todos-calendar.jpg" alt="할 일 — 월간 캘린더"></a><br><sub>할 일 — 월간 캘린더</sub></td><td width="50%"><a href="docs/screenshots/06-ledger.jpg"><img src="docs/screenshots/06-ledger.jpg" alt="가계부 — 거래 입력·기간별 합계"></a><br><sub>가계부 — 거래 입력·기간별 합계</sub></td></tr>
+<tr><td width="50%"><a href="docs/screenshots/07-ledger-stats.jpg"><img src="docs/screenshots/07-ledger-stats.jpg" alt="가계부 — 월별 지출·예산 사용률·분류별 지출"></a><br><sub>가계부 — 월별 지출·예산 사용률·분류별 지출</sub></td><td width="50%"><a href="docs/screenshots/08-hanja.jpg"><img src="docs/screenshots/08-hanja.jpg" alt="한자 — 오늘의 한자·퀴즈·진행 현황"></a><br><sub>한자 — 오늘의 한자·퀴즈·진행 현황</sub></td></tr>
+<tr><td width="50%"><a href="docs/screenshots/09-daily.jpg"><img src="docs/screenshots/09-daily.jpg" alt="하루 마무리 — 일기(비밀번호 확인 후 열림)·내 일기 목록·그날의 기록"></a><br><sub>하루 마무리 — 일기(비밀번호 확인 후 열림)·내 일기 목록·그날의 기록</sub></td><td width="50%"><a href="docs/screenshots/10-mobile-home.jpg"><img src="docs/screenshots/10-mobile-home.jpg" alt="모바일 — 홈"></a><br><sub>모바일 — 홈</sub></td></tr>
+<tr><td width="50%"><a href="docs/screenshots/11-mobile-todos.jpg"><img src="docs/screenshots/11-mobile-todos.jpg" alt="모바일 — 할 일"></a><br><sub>모바일 — 할 일</sub></td><td></td></tr>
+</table>
+
 ## 구현 상태
 
 ### 구현 완료
