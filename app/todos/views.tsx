@@ -161,13 +161,13 @@ export function TodayView(props: ViewProps) {
       <h2 className="text-2xl font-bold">오늘</h2>
       <p className="mt-1 text-sm text-gray-500">{groupLabel(today, today)}</p>
       <div className="mt-3 flex gap-2 text-sm" aria-label="요약">
-        <button type="button" onClick={() => jump("g-overdue")} className={`${stat} bg-red-50 ring-red-100`}>
-          <span className="block text-xs text-red-700">기한 지난 일</span>
-          <span className="text-lg font-bold text-red-800">{overdue.length}</span>
-        </button>
         <button type="button" onClick={() => jump("g-today")} className={`${stat} bg-green-50 ring-green-100`}>
           <span className="block text-xs text-green-700">오늘 해야 할 일</span>
           <span className="text-lg font-bold text-green-800">{todays.length}</span>
+        </button>
+        <button type="button" onClick={() => jump("g-overdue")} className={`${stat} bg-red-50 ring-red-100`}>
+          <span className="block text-xs text-red-700">기한 지난 일</span>
+          <span className="text-lg font-bold text-red-800">{overdue.length}</span>
         </button>
         <button type="button" onClick={() => jump("g-later")} className={`${stat} bg-purple-50 ring-purple-100`}>
           <span className="block text-xs text-purple-700">남은 일</span>
@@ -178,11 +178,11 @@ export function TodayView(props: ViewProps) {
       {/* 처음 불러오기 전에는 빈 안내('없습니다')를 보이지 않음 */}
       {open.ready && (
         <>
-      <Group {...props} id="g-overdue" title="기한 지난 일" tone="text-red-700" items={overdue} showDate limit={PREVIEW} empty="기한 지난 일이 없습니다. 👍" />
-      <Group {...props} id="g-today" title="오늘 해야 할 일" tone="text-green-800" items={todays} empty="오늘 할 일이 없습니다.">
-        <AddInline {...props} date={today} />
-      </Group>
-      <Group {...props} id="g-later" title="남은 일 (내일 이후)" tone="text-purple-800" items={later} showDate limit={PREVIEW} empty="예정된 일이 없습니다." />
+          <Group {...props} id="g-today" title="오늘 해야 할 일" tone="text-green-800" items={todays} empty="오늘 할 일이 없습니다.">
+            <AddInline {...props} date={today} />
+          </Group>
+          <Group {...props} id="g-overdue" title="기한 지난 일" tone="text-red-700" items={overdue} showDate limit={PREVIEW} empty="기한 지난 일이 없습니다. 👍" />
+          <Group {...props} id="g-later" title="남은 일 (내일 이후)" tone="text-purple-800" items={later} showDate limit={PREVIEW} empty="예정된 일이 없습니다." />
         </>
       )}
       {done.items.length > 0 && (
