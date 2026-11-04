@@ -5,7 +5,7 @@ import { QUESTION_COLUMNS, toQuizQuestion, type QuestionRow, type TodayQuiz } fr
 
 /**
  * GET /api/hanja/quizzes/today — 오늘 배정된 한자의 문제 (정답·해설 제외). PRD 8.10
- * 오늘 배정이 없으면 data: null. 초기 10자는 한자당 정확히 1문제.
+ * 오늘 배정이 없으면 data: null. 한자당 정확히 1문제.
  */
 export async function GET() {
   return handle(async () => {

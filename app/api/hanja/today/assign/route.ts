@@ -13,7 +13,7 @@ type AssignRow = {
 /**
  * POST /api/hanja/today/assign — 오늘의 한자 배정 (PRD 8.10)
  * 원자적 배정은 DB 함수 assign_today_hanja()가 처리 (중복 배정·동시 요청 방지, 서울 날짜 기준).
- * 새로 배정 201, 이미 오늘 배정됨 200 (기존 결과), 10자 모두 배정됨 409.
+ * 새로 배정 201, 이미 오늘 배정됨 200 (기존 결과), 준비된 한자 모두 배정됨 409.
  */
 export async function POST() {
   return handle(async () => {
