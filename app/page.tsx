@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { DailyQuote } from "@/components/daily-quote";
 import { HomeDashboard } from "./home-dashboard";
 
 export default function Home() {
@@ -9,15 +10,19 @@ export default function Home() {
         <Suspense fallback={<div className="mt-8 rounded-lg bg-white p-6 text-sm text-gray-500 shadow">불러오는 중…</div>}>
           <HomeDashboard
             header={
-              <>
-                <h1 className="text-3xl font-bold">
-                  하루정리 (Haru Board)
-                </h1>
+              /* 제목 옆(좁은 화면에서는 아래)에 로그인할 때마다 바뀌는 오늘의 글귀 */
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold">
+                    하루정리 (Haru Board)
+                  </h1>
 
-                <p className="mt-4 text-gray-600">
-                  할 일 · 가계부 · 천자문 학습을 한곳에서 관리합니다.
-                </p>
-              </>
+                  <p className="mt-4 text-gray-600">
+                    할 일 · 가계부 · 천자문 학습을 한곳에서 관리합니다.
+                  </p>
+                </div>
+                <DailyQuote />
+              </div>
             }
           />
         </Suspense>
