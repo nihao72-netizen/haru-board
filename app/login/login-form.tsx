@@ -1,15 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { Field, NoticeBox, SubmitButton, translateAuthError, type Notice } from "@/components/auth-ui";
+import { navigateAfterAuthChange } from "@/lib/auth-navigate";
 import { safeNextPath } from "@/lib/safe-next";
 import { createClient } from "@/lib/supabase/client";
 import { SUPABASE_NOT_CONFIGURED_MESSAGE } from "@/lib/supabase/env";
 
 export function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const next = safeNextPath(searchParams.get("next"));
   const callbackError = searchParams.get("error");
@@ -38,8 +38,8 @@ export function LoginForm() {
 
     if (error) return setNotice({ type: "error", text: translateAuthError(error.message) });
 
-    router.replace(next);
-    router.refresh();
+    // 전체 새로 불러오기: 로그인 전에 받아 둔 화면 상태·링크 결과를 버린다
+    navigateAfterAuthChange(next);
   }
 
   return (

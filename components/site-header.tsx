@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { navigateAfterAuthChange } from "@/lib/auth-navigate";
 import { isSampleEmail } from "@/lib/sample";
 import { ReminderWatcher } from "./reminder-watcher";
 import { SampleBanner, SampleButton } from "./sample-ui";
@@ -14,7 +14,6 @@ type AuthStatus = "unknown" | "signed_in" | "signed_out";
 export function SiteHeader() {
   const [status, setStatus] = useState<AuthStatus>(isSupabaseConfigured ? "unknown" : "signed_out");
   const [sample, setSample] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     const supabase = createClient();
@@ -35,8 +34,7 @@ export function SiteHeader() {
     if (!sample) return;
     e.preventDefault();
     await createClient()?.auth.signOut();
-    router.push("/");
-    router.refresh();
+    navigateAfterAuthChange("/");
   };
 
   const linkClass =

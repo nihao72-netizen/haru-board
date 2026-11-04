@@ -44,6 +44,7 @@ export function HomeDashboard({ header }: { header: React.ReactNode }) {
       .then((d) => {
         if (cancelled) return;
         setData(d);
+        setSignedOut(false);
         setError(null);
       })
       .catch((e) => {

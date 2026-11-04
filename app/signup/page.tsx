@@ -1,14 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { AuthCard, Field, NoticeBox, SubmitButton, translateAuthError, type Notice } from "@/components/auth-ui";
 import { createClient } from "@/lib/supabase/client";
+import { navigateAfterAuthChange } from "@/lib/auth-navigate";
 import { SUPABASE_NOT_CONFIGURED_MESSAGE } from "@/lib/supabase/env";
 
 export default function SignupPage() {
-  const router = useRouter();
   const [pending, setPending] = useState(false);
   const [notice, setNotice] = useState<Notice>(null);
 
@@ -43,8 +42,7 @@ export default function SignupPage() {
     if (error) return setNotice({ type: "error", text: translateAuthError(error.message) });
 
     if (data.session) {
-      router.replace("/");
-      router.refresh();
+      navigateAfterAuthChange("/");
       return;
     }
     setNotice({ type: "info", text: "가입 확인 메일을 확인하세요." });

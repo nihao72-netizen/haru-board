@@ -1,13 +1,12 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { navigateAfterAuthChange } from "@/lib/auth-navigate";
 import { SAMPLE_EMAIL, SAMPLE_PASSWORD } from "@/lib/sample";
 import { createClient } from "@/lib/supabase/client";
 
 /** "샘플 확인": 보기 전용 샘플 계정으로 로그인해 홈으로 이동 */
 export function SampleButton(props: { className?: string; label?: string }) {
-  const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,10 +20,8 @@ export function SampleButton(props: { className?: string; label?: string }) {
       setBusy(false);
       return setError(e.status === 429 ? "요청이 많아요. 잠시 후 다시 시도해 주세요." : "샘플을 열지 못했어요. 잠시 후 다시 시도해 주세요.");
     }
-    // 헤더·홈 대시보드는 로그인 상태 변경 이벤트를 받아 다시 그려진다
-    router.push("/");
-    router.refresh();
-    setBusy(false);
+    // 전체 새로 불러오기: 로그인 전에 받아 둔 화면 상태·링크 결과를 버린다
+    navigateAfterAuthChange("/");
   }
 
   return (
@@ -43,14 +40,12 @@ export function SampleButton(props: { className?: string; label?: string }) {
 
 /** 샘플 보기 중 안내 띠: 모든 화면 위. '내 계정 만들기'는 로그아웃 후 회원가입으로 */
 export function SampleBanner() {
-  const router = useRouter();
   const [busy, setBusy] = useState(false);
   /** 샘플을 끝내고(로그아웃) 이동 */
   async function leave(to: "/" | "/signup") {
     setBusy(true);
     await createClient()?.auth.signOut();
-    router.push(to);
-    router.refresh();
+    navigateAfterAuthChange(to);
   }
   return (
     <div role="status" className="border-b border-lavender bg-lavender/60">

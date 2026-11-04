@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { AuthCard, Field, NoticeBox, SubmitButton, type Notice } from "@/components/auth-ui";
 import { createClient } from "@/lib/supabase/client";
+import { navigateAfterAuthChange } from "@/lib/auth-navigate";
 import { SUPABASE_NOT_CONFIGURED_MESSAGE, isSupabaseConfigured } from "@/lib/supabase/env";
 
 type LoadState =
@@ -14,7 +14,6 @@ type LoadState =
   | { status: "ready"; userId: string; email: string; displayName: string; profileError: boolean };
 
 export default function AccountPage() {
-  const router = useRouter();
   const [state, setState] = useState<LoadState>(
     isSupabaseConfigured ? { status: "loading" } : { status: "not_configured" },
   );
@@ -81,8 +80,7 @@ export default function AccountPage() {
     if (!supabase) return;
     setSigningOut(true);
     await supabase.auth.signOut();
-    router.replace("/login");
-    router.refresh();
+    navigateAfterAuthChange("/login");
   }
 
   return (
