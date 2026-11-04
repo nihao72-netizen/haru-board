@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { QUOTES, quoteIndexFor } from "@/lib/quotes";
+import type { Quote } from "@/lib/quotes";
 import { createClient } from "@/lib/supabase/client";
 
 const storeKey = (seed: string) => `haru:quote:${seed}`;
@@ -9,36 +9,42 @@ const storeKey = (seed: string) => `haru:quote:${seed}`;
 /**
  * 오늘의 글귀: 로그인할 때마다 다른 명언. 같은 로그인 동안은 새로고침해도 같은 글귀이고,
  * '다른 글귀'를 누르면 바꾼 글귀가 이번 로그인 동안 유지된다.
+ * 명언 목록(약 1,000개)은 첫 화면 부담을 줄이려고 필요할 때 따로 불러온다.
  */
 export function DailyQuote() {
-  const [state, setState] = useState<{ seed: string; index: number } | null>(null);
+  const [state, setState] = useState<{ seed: string; index: number; quotes: Quote[] } | null>(null);
 
   useEffect(() => {
-    createClient()
-      ?.auth.getUser()
-      .then(({ data }) => {
-        const user = data.user;
-        if (!user) return;
-        const seed = `${user.id}:${user.last_sign_in_at ?? ""}`;
-        let index = quoteIndexFor(seed);
-        try {
-          const saved = sessionStorage.getItem(storeKey(seed));
-          if (saved !== null && Number(saved) >= 0 && Number(saved) < QUOTES.length) index = Number(saved);
-        } catch {}
-        setState({ seed, index });
-      });
+    let cancelled = false;
+    const supabase = createClient();
+    if (!supabase) return;
+    Promise.all([supabase.auth.getUser(), import("@/lib/quotes")]).then(([{ data }, { QUOTES, quoteIndexFor }]) => {
+      const user = data.user;
+      if (cancelled || !user) return;
+      const seed = `${user.id}:${user.last_sign_in_at ?? ""}`;
+      let index = quoteIndexFor(seed);
+      try {
+        const saved = sessionStorage.getItem(storeKey(seed));
+        if (saved !== null && Number(saved) >= 0 && Number(saved) < QUOTES.length) index = Number(saved);
+      } catch {}
+      setState({ seed, index, quotes: QUOTES });
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   if (!state) return null;
-  const q = QUOTES[state.index];
+  const { quotes } = state;
+  const q = quotes[state.index];
 
   function next() {
     setState((s) => {
       if (!s) return s;
       // 지금 글귀와 다른 것으로 (작가도 가능하면 다르게)
       let n = s.index;
-      for (let tries = 0; tries < 10 && (n === s.index || QUOTES[n].author === QUOTES[s.index].author); tries++) {
-        n = Math.floor(Math.random() * QUOTES.length);
+      for (let tries = 0; tries < 10 && (n === s.index || s.quotes[n].author === s.quotes[s.index].author); tries++) {
+        n = Math.floor(Math.random() * s.quotes.length);
       }
       try {
         sessionStorage.setItem(storeKey(s.seed), String(n));

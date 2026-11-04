@@ -1,13 +1,14 @@
 // 홈 화면 '오늘의 글귀': 동서양 명언 (예수님·부처님 포함)
 // - 출처(원전·연설·편지 등)를 확인할 수 있는 말만 모았다. 잘못 알려진 명언(스피노자의 사과나무 등)은 넣지 않았다.
 // - 번역문 저작권을 피하려고 문장은 원뜻을 살려 직접 옮긴 표현이다(성경도 특정 번역본 문구가 아님).
-export type Quote = { text: string; author: string; source?: string };
+import type { Quote } from "./types";
 
 const 논어 = (text: string, source = "논어"): Quote => ({ text, author: "공자", source });
 const 도덕경 = (text: string): Quote => ({ text, author: "노자", source: "도덕경" });
 const 법구경 = (text: string): Quote => ({ text, author: "부처", source: "법구경" });
 
-export const QUOTES: Quote[] = [
+/** 처음 모은 208개 */
+export const BASE: Quote[] = [
   // ── 공자 (논어) ──
   논어("배우고 때때로 익히면 또한 기쁘지 아니한가."),
   논어("먼 곳에서 벗이 찾아오니 또한 즐겁지 아니한가."),
@@ -226,10 +227,3 @@ export const QUOTES: Quote[] = [
   { text: "오직 한없이 가지고 싶은 것은 높은 문화의 힘이다.", author: "김구", source: "나의 소원" },
   { text: "낙망은 청년의 죽음이요, 청년이 죽으면 민족이 죽는다.", author: "안창호" },
 ];
-
-/** 로그인 시각(같은 로그인 동안은 같은 값)으로 글귀 번호를 정한다 */
-export function quoteIndexFor(seed: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < seed.length; i++) h = Math.imul(h ^ seed.charCodeAt(i), 16777619);
-  return Math.abs(h) % QUOTES.length;
-}
